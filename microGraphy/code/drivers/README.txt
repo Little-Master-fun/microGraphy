@@ -23,6 +23,20 @@
 *      ? 数据格式转换 (原始数据→物理量)
 *      ? 错误检测和状态监控
 * 
+* 2. driver_motor.h / driver_motor.c
+*    - 功能：双电机驱动系统
+*    - 硬件：支持左右两个独立电机控制
+*    - 接口：PWM调速 + GPIO方向控制
+*    - 主要功能：
+*      ? 电机系统初始化 (motor_init)
+*      ? 单个/双电机方向控制 (motor_set_direction)
+*      ? 单个/双电机速度控制 (motor_set_speed)
+*      ? 电机停止控制 (motor_stop)
+*      ? PWM值保护机制 (motor_pwm_protect)
+*      ? 差速运动控制 (motor_differential_drive)
+*      ? 电机功能测试 (motor_test)
+*      ? 支持枚举类型：电机ID、方向、状态
+* 
 * 驱动程序设计原则：
 * 1. 硬件抽象层 (HAL) 设计
 *    - hw_init(): 硬件初始化

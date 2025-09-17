@@ -1419,6 +1419,12 @@
         <group>
             <name>test</name>
             <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_motor.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_motor.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_sch16tk10.c</name>
             </file>
             <file>
