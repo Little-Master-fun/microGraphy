@@ -36,6 +36,19 @@
 *    - 显示：通过IPS114屏幕实时显示编码器数据
 *    - 测试方法：手动转动车轮，观察屏幕数据变化
 * 
+* 4. test_flash_road.h / test_flash_road.c
+*    - 功能：Flash存储路径数据系统测试程序
+*    - 作用：验证Flash存储系统的存储、读取、数据完整性等功能
+*    - 使用：在main函数中调用test_flash_road()进行综合测试
+*    - 测试项目：
+*      ? test_flash_road_basic(): 基本功能测试（初始化、存储、读取、清除）
+*      ? test_flash_road_integrity(): 数据完整性测试（数据验证、一致性检查）
+*      ? test_flash_road_performance(): 性能测试（存储速度、读取速度）
+*      ? test_flash_road_boundary(): 边界条件测试（空数据、满容量、异常参数）
+*      ? test_flash_road_compatibility(): 兼容性测试（新旧接口兼容性）
+*    - 显示：通过IPS114屏幕实时显示测试进度和结果
+*    - 测试特点：包含多种数据量级的性能测试和全面的错误处理验证
+* 
 * 使用说明：
 * 1. 在主程序中包含相应的测试头文件
 * 2. 调用对应的测试函数

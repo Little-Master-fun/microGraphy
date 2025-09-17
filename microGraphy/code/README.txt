@@ -20,13 +20,19 @@
 *    - 文件：driver_sch16tk10.h/.c (SCH16TK10 IMU驱动)
 *    - 作用：封装硬件操作，提供标准化接口
 * 
-* 3. test/
+* 3. stroage/
+*    - 功能：数据存储系统目录
+*    - 内容：Flash存储管理和数据持久化
+*    - 文件：flash_road.h/.c (Flash路径数据存储)
+*    - 作用：管理机器人路径数据的持久化存储
+* 
+* 4. test/
 *    - 功能：测试程序目录
 *    - 内容：硬件功能验证和调试程序
-*    - 文件：test_sch16tk10.h/.c (IMU传感器测试)
+*    - 文件：test_sch16tk10.h/.c、test_motor.h/.c、test_encoder.h/.c、test_flash_road.h/.c
 *    - 作用：验证硬件功能，辅助开发调试
 * 
-* 4. 本文件夹作用.txt
+* 5. 本文件夹作用.txt
 *    - 功能：目录说明文件
 *    - 内容：简要说明code目录的用途
 * 
