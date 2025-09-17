@@ -51,10 +51,31 @@
 #define NAV_DEFAULT_R2              (30)        // 控制半径2
 
 //=================================================PID参数配置================================================
-#define NAV_DEFAULT_PID_KP          (1.0f)      // PID比例系数
+// 主要路径跟踪PID参数 (PIDG - 导航控制)
+#define NAV_DEFAULT_PID_KP          (24.3f)     // PID比例系数 (主要路径跟踪)
 #define NAV_DEFAULT_PID_KI          (0.0f)      // PID积分系数
-#define NAV_DEFAULT_PID_KD          (0.0f)      // PID微分系数
+#define NAV_DEFAULT_PID_KD          (29.5f)     // PID微分系数
 #define NAV_DEFAULT_PID_SPEED       (100)       // PID默认速度
+
+// 电机速度环PID参数 (PIDS - 速度控制)
+#define MOTOR_SPEED_PID_KP          (30.0f)     // 速度环比例系数
+#define MOTOR_SPEED_PID_KI          (2.4f)      // 速度环积分系数
+#define MOTOR_SPEED_PID_KD          (0.0f)      // 速度环微分系数
+
+// 转向控制PID参数 (PIDD - 方向控制)
+#define DIRECTION_PID_KP            (12.9f)     // 方向控制比例系数
+#define DIRECTION_PID_KI            (0.0f)      // 方向控制积分系数
+#define DIRECTION_PID_KD            (13.6f)     // 方向控制微分系数
+
+// 直线行驶PID参数 (PID1 - 直线方向)
+#define STRAIGHT_LINE_PID_KP        (10.0f)     // 直线方向比例系数
+#define STRAIGHT_LINE_PID_KI        (0.0f)      // 直线方向积分系数
+#define STRAIGHT_LINE_PID_KD        (10.0f)     // 直线方向微分系数
+
+// 左轮速度PID参数 (PIDSL - 左轮速度，继承PIDS)
+#define LEFT_WHEEL_SPEED_PID_KP     (30.0f)     // 左轮速度比例系数 (继承PIDS)
+#define LEFT_WHEEL_SPEED_PID_KI     (2.4f)      // 左轮速度积分系数 (继承PIDS)
+#define LEFT_WHEEL_SPEED_PID_KD     (0.0f)      // 左轮速度微分系数 (继承PIDS)
 
 //=================================================系统运行配置================================================
 #define NAV_DEFAULT_TARGET_SPEED    (0)         // 默认目标速度
@@ -430,9 +451,9 @@ void nav_data_reset(void);
 #define go_index            (nav_config.go_flag)
 #define go_go_go            (nav_config.go_state)
 
-// 数据变量访问宏（解决命名不规范问题）
-#define sum                             (nav_data.encoder_sum)
-#define suml                            (nav_data.encoder_left)
+// 数据变量访问宏（这名字跟取着玩一样）
+#define encoder_sum_nav                 (nav_data.encoder_sum)
+#define encoder_left_nav                (nav_data.encoder_left)
 #define max_error_point_mem             (nav_data.max_error_point_count)
 #define actual_error_point              (nav_data.actual_error_point_count)
 #define point_error_index               (nav_data.current_error_point_index)
@@ -466,21 +487,21 @@ void nav_data_reset(void);
 #define Mileage_All_sum_list            nav_mileage_list
 #define data_yaw_buffer                 nav_yaw_buffer
 
-// 不规范变量名映射（逐渐废弃）
-#define aa                              (nav_data.calculation_buffer)
-#define bx                              6
-#define yugvbjvutyjvbihihib             (nav_data.curvature_threshold_flag)
-#define vbhjnmkl                        (nav_data.straight_angle_flag)
-#define hgbnm                           (nav_data.last_straight_flag)
-#define ghui                            (nav_data.positive_reset_state)
-#define tyu                             (nav_data.negative_reset_state)
-#define vbn                             (nav_data.continuous_straight_flag)
-#define iiiop                           (nav_data.time_counter_1)
-#define opopop_zhijiao                  (nav_data.curvature_straight)
-#define tyu_zhijiao                     (nav_data.time_counter_2)
-#define vbn_zhijiao                     (nav_data.was_high_threshold)
-#define ghui_zhijiao                    (nav_data.was_low_threshold)
-#define qulvzhe                         (nav_data.curvature)
-#define Qulv                            (nav_data.curvature)
+// 不规范变量名映射（认真的吗）
+// #define calc_buffer_aa                  (nav_data.calculation_buffer)
+// #define const_bx                        6
+// #define yugvbjvutyjvbihihib             (nav_data.curvature_threshold_flag)
+// #define vbhjnmkl                        (nav_data.straight_angle_flag)
+// #define hgbnm                           (nav_data.last_straight_flag)
+// #define ghui                            (nav_data.positive_reset_state)
+// #define tyu                             (nav_data.negative_reset_state)
+// #define vbn                             (nav_data.continuous_straight_flag)
+// #define iiiop                           (nav_data.time_counter_1)
+// #define opopop_zhijiao                  (nav_data.curvature_straight)
+// #define tyu_zhijiao                     (nav_data.time_counter_2)
+// #define vbn_zhijiao                     (nav_data.was_high_threshold)
+// #define ghui_zhijiao                    (nav_data.was_low_threshold)
+// #define qulvzhe                         (nav_data.curvature)
+// #define Qulv                            (nav_data.curvature)
 
 #endif

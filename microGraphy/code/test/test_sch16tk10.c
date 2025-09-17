@@ -59,27 +59,46 @@ void test_imu(void)
     SCH1_decimation sDecimation;
 
     // 设置默认参数
-    sFilter.Rate12 = 30; 
-    sFilter.Acc12 = 30;
-    sFilter.Acc3 = 30;
+    sFilter.Rate12 = 30.0f; 
+    sFilter.Acc12 = 30.0f;
+    sFilter.Acc3 = 30.0f;
 
-    sSensitivity.Rate1 = 1600;
-    sSensitivity.Rate2 = 1600;
-    sSensitivity.Acc1 = 3200;
-    sSensitivity.Acc2 = 3200;
-    sSensitivity.Acc3 = 3200;
+    sSensitivity.Rate1 = 6400.0f;
+    sSensitivity.Rate2 = 6400.0f;
+    sSensitivity.Acc1 = 25600.0f;
+    sSensitivity.Acc2 = 25600.0f;
+    sSensitivity.Acc3 = 25600.0f;
 
-    sDecimation.Rate2 = 2;
-    sDecimation.Acc2 = 2;
+    sDecimation.Rate2 = 1;
+    sDecimation.Acc2 = 1;
 
+    SCH1_status status;
+    int init_result = SCH1_init(sFilter, sSensitivity, sDecimation, false);
+    
+    if (init_result != SCH1_OK)
+    {
+        char error_msg[50];
+        sprintf(error_msg, "Init Error: %d", init_result);
+        ips114_show_string(0, 16, error_msg);
+        
+        // 读取状态寄存器进行诊断
+        SCH1_getStatus(&status);
+        sprintf(error_msg, "Summary: 0x%04X", status.Summary);
+        ips114_show_string(0, 32, error_msg);
+        sprintf(error_msg, "Common: 0x%04X", status.Common);
+        ips114_show_string(0, 48, error_msg);
+        
+        while (1);
+    }
+    
     if (SCH1_init(sFilter, sSensitivity, sDecimation, false) != SCH1_OK)
     {
-        ips114_show_string(0, 16, "IMU Init Failed!");
-        while (1);
+       ips114_show_string(0, 16, "IMU Init Failed!");
+       while (1);
     }
     else
     {
-        ips114_show_string(0, 16, "IMU Init Success!");
+       ips114_show_string(0, 16, "IMU Init Success!");
     }
     
     system_delay_ms(1000);

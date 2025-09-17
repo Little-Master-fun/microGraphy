@@ -61,8 +61,8 @@ uint8 nav_system_init(void)
 void nav_data_save(void)
 {
     // 更新里程计数
-    nav_system.mileage_total += (sum + suml) / 2;
-    Mileage_All_sum += (sum + suml) / 2;
+    nav_system.mileage_total += (encoder_sum_nav + encoder_left_nav) / 2;
+    Mileage_All_sum += (encoder_sum_nav + encoder_left_nav) / 2;
     
     // 保存当前数据到数组
     if (actual_error_point < NAV_COORD_RECORD_SIZE)
@@ -84,7 +84,7 @@ void nav_data_save(void)
 //-------------------------------------------------------------------------------------------------------------------
 void nav_data_resave(void)
 {
-    Mileage_All_sum += (sum + suml) / 2;
+    Mileage_All_sum += (encoder_sum_nav + encoder_left_nav) / 2;
     
     int search_start = (point_error_index >= 10) ? point_error_index - 10 : 0;
     
@@ -100,13 +100,13 @@ void nav_data_resave(void)
         {
             curvature_threshold_counter++;
             threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 16 - 0.2) * 
-                              ((sum + suml) / 2 - 50) / 150.0f;
+                              ((encoder_sum_nav + encoder_left_nav) / 2 - 50) / 150.0f;
         }
         else
         {
             lastopopop = 0;
             threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 70 + 9.0f / 7) * 
-                              (((sum + suml) / 2 - 150) / 116.0f);
+                              (((encoder_sum_nav + encoder_left_nav) / 2 - 150) / 116.0f);
         }
         
         if (Mileage_All_sum_list[i] >= (Mileage_All_sum + threshold_offset))

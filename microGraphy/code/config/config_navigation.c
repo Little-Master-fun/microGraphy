@@ -99,23 +99,23 @@ void nav_config_load_default(void)
     nav_config.nav_pid_kd = NAV_DEFAULT_PID_KD;
     nav_config.nav_pid_speed = NAV_DEFAULT_PID_SPEED;
     
-    // 电机控制PID参数默认值
-    // 左电机速度环PID
-    nav_config.motor_control.left_speed_kp = 8.0f;
-    nav_config.motor_control.left_speed_ki = 0.5f;
-    nav_config.motor_control.left_speed_kd = 0.1f;
+    // 电机控制PID参数默认值 (使用实际调试参数)
+    // 左电机速度环PID (PIDSL - 左轮速度，继承PIDS参数)
+    nav_config.motor_control.left_speed_kp = LEFT_WHEEL_SPEED_PID_KP;  // 30.0f
+    nav_config.motor_control.left_speed_ki = LEFT_WHEEL_SPEED_PID_KI;  // 2.4f
+    nav_config.motor_control.left_speed_kd = LEFT_WHEEL_SPEED_PID_KD;  // 0.0f
     
-    // 左电机位置环PID
+    // 左电机位置环PID (暂时保持原值)
     nav_config.motor_control.left_position_kp = 2.0f;
     nav_config.motor_control.left_position_ki = 0.1f;
     nav_config.motor_control.left_position_kd = 0.05f;
     
-    // 右电机速度环PID
-    nav_config.motor_control.right_speed_kp = 8.0f;
-    nav_config.motor_control.right_speed_ki = 0.5f;
-    nav_config.motor_control.right_speed_kd = 0.1f;
+    // 右电机速度环PID (PIDS - 速度控制)
+    nav_config.motor_control.right_speed_kp = MOTOR_SPEED_PID_KP;      // 30.0f
+    nav_config.motor_control.right_speed_ki = MOTOR_SPEED_PID_KI;      // 2.4f
+    nav_config.motor_control.right_speed_kd = MOTOR_SPEED_PID_KD;      // 0.0f
     
-    // 右电机位置环PID
+    // 右电机位置环PID (暂时保持原值)
     nav_config.motor_control.right_position_kp = 2.0f;
     nav_config.motor_control.right_position_ki = 0.1f;
     nav_config.motor_control.right_position_kd = 0.05f;

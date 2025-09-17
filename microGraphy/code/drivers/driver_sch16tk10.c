@@ -61,8 +61,7 @@ static void GPIO_init(void) {
  * @brief  SPI外设初始化 / SPI peripheral initialization
  */
 static void SPI_Init(void) {
-    // 初始化SPI2外设：模式0，1MHz时钟，不使用硬件CS
-    // Initialize SPI2 peripheral: mode 0, 1MHz clock, no hardware CS
+    // 修复SPI初始化函数调用
     spi_init(SPI_2, SPI_MODE0, 1000000, SPI2_SCK_PIN, SPI2_MOSI_PIN, SPI2_MISO_PIN, SPI_CS_NULL);
 }
 
@@ -1093,7 +1092,7 @@ void SCH1_updateSPIStats(bool success, uint32_t error_type)
             g_spi_stats.max_consecutive_errors = g_spi_stats.consecutive_errors;
         }
         
-        // 鏍规嵁閿欒??绫诲瀷鏇存柊瀵瑰簲璁℃暟鍣?
+        // 鏍规嵇閿欒??绫诲瀷鏇存柊瀵瑰簲璁℃暟鍣?
         switch (error_type) {
             case 1: g_spi_stats.crc_errors++; break;
             case 2: g_spi_stats.frame_errors++; break;

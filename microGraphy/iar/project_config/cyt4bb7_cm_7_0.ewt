@@ -1494,6 +1494,9 @@
         <group>
             <name>test</name>
             <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_common_headfile.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_encoder.c</name>
             </file>
             <file>
@@ -1516,6 +1519,12 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_sch16tk10.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_square_path.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_square_path.h</name>
             </file>
         </group>
         <group>

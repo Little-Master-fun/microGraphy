@@ -42,6 +42,11 @@ uint8 test_motor_control(void)
     uint8 test_count = 0;
     uint8 pass_count = 0;
     
+        // ³õÊ¼»¯ÆÁÄ»
+    ips114_set_dir(IPS114_PORTAIT);
+    ips114_set_color(RGB565_WHITE, RGB565_BLACK);
+    ips114_init();
+
     ips114_clear();
     ips114_show_string(0, 0, "Motor Control Test");
     ips114_show_string(0, 16, "Starting...");
