@@ -374,12 +374,12 @@
                     <state>$PROJ_DIR$\..\..\..\libraries\zf_components</state>
                     <state>$PROJ_DIR$\..\..\user</state>
                     <state>$PROJ_DIR$\..\..\code</state>
-                    <state>$PROJ_DIR$\..\..\code\drivers</state>
+                    <state>$PROJ_DIR$\..\..\code\stroage</state>
                     <state>$PROJ_DIR$\..\..\code\config</state>
                     <state>$PROJ_DIR$\..\..\code\test</state>
                     <state>$PROJ_DIR$\..\..\code\nav</state>
                     <state>$PROJ_DIR$\..\..\code\ui</state>
-                    <state>$PROJ_DIR$\..\..\code\stroage</state>
+                    <state>$PROJ_DIR$\..\..\code\drivers</state>
                     <state>F:\AutoCar\microGraphy\microGraphy\code\stroage</state>
                 </option>
                 <option>
@@ -712,7 +712,7 @@
             <data>
                 <extensions></extensions>
                 <cmdline></cmdline>
-                <hasPrio>168</hasPrio>
+                <hasPrio>1</hasPrio>
                 <buildSequence>inputOutputBased</buildSequence>
             </data>
         </settings>
@@ -1431,6 +1431,12 @@
             <file>
                 <name>$PROJ_DIR$\..\..\code\drivers\driver_sch16tk10.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.h</name>
+            </file>
         </group>
         <group>
             <name>nav</name>
@@ -1439,15 +1445,6 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.h</name>
-            </file>
-        </group>
-        <group>
-            <name>stroage</name>
-            <file>
-                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.h</name>
             </file>
         </group>
         <group>

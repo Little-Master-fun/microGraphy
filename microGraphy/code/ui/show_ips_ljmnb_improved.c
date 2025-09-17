@@ -24,7 +24,22 @@
 #include "zf_device_ips114.h"
 
 //=================================================全局变量定义================================================
-ui_state_struct ui_state = {0};                // UI状态结构
+ui_state_struct ui_state = {                    // UI状态结构
+    .current_mode = UI_MODE0,                       // 初始化为模式0
+    .current_param = UI_KEY2_PARAM_0,               // 初始化为参数0
+    .key3_action = UI_KEY3_INCREASE,                // 初始化为增加动作
+    .key4_action = UI_KEY4_DECREASE,                // 初始化为减少动作
+    .key1_pressed = false,                          // 按键状态为false
+    .key1_last_state = false,
+    .key2_pressed = false,
+    .key2_last_state = false,
+    .key3_pressed = false,
+    .key3_last_state = false,
+    .key4_pressed = false,
+    .key4_last_state = false,
+    .display_refresh_flag = 0,                      // 显示标志为0
+    .last_refresh_time = 0                          // 时间为0
+};
 
 //=================================================硬件引脚定义================================================
 #define UI_LED_PIN                      (P19_0)

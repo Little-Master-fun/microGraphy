@@ -503,9 +503,9 @@ static flash_road_result_enum flash_load_metadata(uint32 *data_points)
             // 读取in_duan参数
             for(int i = 0; i < FLASH_ROAD_IN_OUT_PARAMS; i++) 
             {
-                in_duan[i] = flash_union_buffer[1 + i].int32_type;
-            }
-            
+            in_duan[i] = flash_union_buffer[1 + i].int32_type;
+        }
+        
             // 读取out_duan参数
             for(int i = 0; i < FLASH_ROAD_IN_OUT_PARAMS; i++) 
             {
@@ -529,9 +529,9 @@ static flash_road_result_enum flash_load_metadata(uint32 *data_points)
             // 读取in_duan参数
             for(int i = 0; i < FLASH_ROAD_IN_OUT_PARAMS; i++) 
             {
-                in_duan[i] = flash_union_buffer[1 + i].int32_type;
-            }
-            
+            in_duan[i] = flash_union_buffer[1 + i].int32_type;
+        }
+        
             // 读取out_duan参数
             for(int i = 0; i < FLASH_ROAD_IN_OUT_PARAMS; i++) 
             {

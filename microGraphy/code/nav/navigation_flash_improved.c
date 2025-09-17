@@ -21,27 +21,13 @@
 
 #include "zf_common_headfile.h"
 #include "navigation_flash_improved.h"
+#include "config_navigation.h"    // 包含配置系统，获取所有数据变量访问权限
 
 //=================================================全局变量定义================================================
 nav_system_struct nav_system = {0};            // 导航系统结构体
 
-// 导航计算相关变量
-float nav_error_direction = 0.0f;              // 误差方向
-int nav_error_angle_direction = 0;              // 误差角度方向
-int nav_point_error_index = 0;                 // 点误差索引
-int nav_error_make_flag = 0;                   // 误差生成标志
-int nav_calculation_buffer = 0;                // 计算缓冲
-float nav_curvature = 0.0f;                    // 曲率
-uint8 nav_status_flags = 0;                    // 状态标志
-
-// 编码器相关变量
-int nav_encoder_sum = 0;                       // 编码器总和
-int nav_encoder_left = 0;                      // 左编码器
-
-// 数据计数相关
-int nav_actual_error_point = 0;                // 实际误差点
-int nav_max_error_point_mem = 0;               // 最大误差点内存
-int nav_mileage_total_sum = 0;                 // 总里程和
+// 注意：所有数据变量现在都通过 config_navigation 系统管理
+// 不再在这里定义局部变量，直接使用宏定义访问配置系统
 
 //=================================================内部函数声明================================================
 static void nav_update_curvature_state_machine(void);
@@ -64,7 +50,7 @@ uint8 nav_system_init(void)
     memset(&nav_system, 0, sizeof(nav_system_struct));
     
     // 设置初始值
-    nav_max_error_point_mem = NAV_COORD_RECORD_SIZE;
+    max_error_point_mem = NAV_COORD_RECORD_SIZE;
     
     return 0;
 }
@@ -75,21 +61,21 @@ uint8 nav_system_init(void)
 void nav_data_save(void)
 {
     // 更新里程计数
-    nav_system.mileage_total += (nav_encoder_sum + nav_encoder_left) / 2;
-    nav_mileage_total_sum += (nav_encoder_sum + nav_encoder_left) / 2;
+    nav_system.mileage_total += (sum + suml) / 2;
+    Mileage_All_sum += (sum + suml) / 2;
     
     // 保存当前数据到数组
-    if (nav_actual_error_point < NAV_COORD_RECORD_SIZE)
+    if (actual_error_point < NAV_COORD_RECORD_SIZE)
     {
-        nav_mileage_list[nav_actual_error_point] = nav_mileage_total_sum;
-        nav_errors_coords[nav_actual_error_point] = nav_error_direction;
-        nav_actual_error_point++;
+        Mileage_All_sum_list[actual_error_point] = Mileage_All_sum;
+        errors_coords[actual_error_point] = error_dir;
+        actual_error_point++;
     }
     
     // 更新最大误差点计数
-    if (nav_actual_error_point > nav_max_error_point_mem)
+    if (actual_error_point > max_error_point_mem)
     {
-        nav_max_error_point_mem = nav_actual_error_point;
+        max_error_point_mem = actual_error_point;
     }
 }
 
@@ -98,43 +84,43 @@ void nav_data_save(void)
 //-------------------------------------------------------------------------------------------------------------------
 void nav_data_resave(void)
 {
-    nav_mileage_total_sum += (nav_encoder_sum + nav_encoder_left) / 2;
+    Mileage_All_sum += (sum + suml) / 2;
     
-    int search_start = (nav_point_error_index >= 10) ? nav_point_error_index - 10 : 0;
+    int search_start = (point_error_index >= 10) ? point_error_index - 10 : 0;
     
     // 处理曲率阈值
     nav_process_curvature_threshold();
     
     // 搜索匹配的误差点
-    for (int i = search_start; i < nav_max_error_point_mem; i++)
+    for (int i = search_start; i < max_error_point_mem; i++)
     {
         float threshold_offset = 0.0f;
         
-        if (fabs(nav_curvature) > 50)
+        if (fabs(qulv) > 50)
         {
-            qulv_yuzhi_chixu_biaozhiwei_hahahahahahahahaha++;
-            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(nav_curvature) / 16 - 0.2) * 
-                              ((nav_encoder_sum + nav_encoder_left) / 2 - 50) / 150.0f;
+            curvature_threshold_counter++;
+            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 16 - 0.2) * 
+                              ((sum + suml) / 2 - 50) / 150.0f;
         }
         else
         {
             lastopopop = 0;
-            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(nav_curvature) / 70 + 9.0f / 7) * 
-                              (((nav_encoder_sum + nav_encoder_left) / 2 - 150) / 116.0f);
+            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 70 + 9.0f / 7) * 
+                              (((sum + suml) / 2 - 150) / 116.0f);
         }
         
-        if (nav_mileage_list[i] >= (nav_mileage_total_sum + threshold_offset))
+        if (Mileage_All_sum_list[i] >= (Mileage_All_sum + threshold_offset))
         {
-            nav_point_error_index = i;
+            point_error_index = i;
             break;
         }
-        nav_calculation_buffer = i;
+        cnmb = i;
     }
     
     // 重置阈值标志
-    if (qulv_yuzhi_chixu_biaozhiwei_hahahahahahahahaha == 2)
+    if (curvature_threshold_counter == 2)
     {
-        qulv_yuzhi_chixu_biaozhiwei_hahahahahahahahaha = 0;
+        curvature_threshold_counter = 0;
     }
 }
 
@@ -212,7 +198,7 @@ void nav_update_parameters(void)
 static void nav_update_curvature_state_machine(void)
 {
     // 实现曲率状态机逻辑
-    if (nav_curvature > 40)
+    if (qulv > 40)
     {
         was_high = true;
         if (zheng_reset_state == 0)
@@ -220,7 +206,7 @@ static void nav_update_curvature_state_machine(void)
             zheng_reset_state = 1;
         }
     }
-    else if (nav_curvature < -40)
+    else if (qulv < -40)
     {
         was_low = true;
         if (fu_reset_state == 0)
@@ -228,14 +214,14 @@ static void nav_update_curvature_state_machine(void)
             fu_reset_state = 1;
         }
     }
-    else if (nav_curvature >= 0 && nav_curvature <= 20)
+    else if (qulv >= 0 && qulv <= 20)
     {
         if (was_high)
         {
             high_to_mid_reset = true;
         }
     }
-    else if (nav_curvature >= -20 && nav_curvature <= 0)
+    else if (qulv >= -20 && qulv <= 0)
     {
         if (was_low)
         {
@@ -283,18 +269,17 @@ static void nav_calculate_path_tracking_output(void)
 static void nav_process_curvature_threshold(void)
 {
     // 处理曲率阈值逻辑
-    if (fabs(nav_curvature) > 50)
+    if (fabs(qulv) > 50)
     {
-        qulv_yuzhi_chixu_biaozhiwei_hahahahahahahahaha++;
+        curvature_threshold_counter++;
     }
     
-    // 更新时间计数器
+    // 更新时间计数器（溢出不是会自动归零吗）
     zhetime++;
-    if (zhetime > 255)
-    {
-        zhetime = 0;
-        zhitime++;
-    }
+    // if (zhetime == 0)  // uint8溢出检测：255+1=0
+    // {
+    //     zhitime++;
+    // }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

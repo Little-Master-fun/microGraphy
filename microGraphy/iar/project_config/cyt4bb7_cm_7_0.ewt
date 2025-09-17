@@ -1463,6 +1463,12 @@
             <file>
                 <name>$PROJ_DIR$\..\..\code\drivers\driver_sch16tk10.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.h</name>
+            </file>
         </group>
         <group>
             <name>nav</name>
@@ -1471,15 +1477,6 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.h</name>
-            </file>
-        </group>
-        <group>
-            <name>stroage</name>
-            <file>
-                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\..\code\stroage\flash_road.h</name>
             </file>
         </group>
         <group>

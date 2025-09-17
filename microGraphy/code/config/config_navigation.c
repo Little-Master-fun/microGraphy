@@ -21,7 +21,7 @@
 
 #include "zf_common_headfile.h"
 #include "config_navigation.h"
-#include "flash_road.h"
+//#include "flash_road.h"
 
 //=================================================全局变量定义================================================
 nav_config_struct nav_config = {0};            // 导航系统配置结构体

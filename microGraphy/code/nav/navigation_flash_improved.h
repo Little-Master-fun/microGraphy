@@ -22,7 +22,8 @@
 #define _NAVIGATION_FLASH_IMPROVED_H_
 
 #include "zf_common_typedef.h"
-#include "config_navigation.h"
+#include "config_navigation.h"    
+
 
 //=================================================导航系统配置================================================
 #define NAV_MAX_SIZE                    NAV_FLASH_MAX_SIZE          // Flash存储的最大页面
@@ -66,25 +67,10 @@ typedef struct
 //=================================================全局变量声明================================================
 extern nav_system_struct nav_system;           // 导航系统结构体
 
-// 编码器相关
-extern int nav_encoder_sum;                    // 编码器总和
-extern int nav_encoder_left;                   // 左编码器
-
-// 数据数组
-extern int nav_actual_error_point;             // 实际误差点
-extern int nav_max_error_point_mem;            // 最大误差点内存
-extern float nav_errors_coords[NAV_COORD_RECORD_SIZE];      // 误差坐标数组
-extern int nav_mileage_total_sum;              // 总里程和
-extern int nav_mileage_list[NAV_COORD_RECORD_SIZE];         // 里程列表
-
-// 导航计算相关
-extern float nav_error_direction;              // 误差方向
-extern int nav_error_angle_direction;          // 误差角度方向
-extern int nav_point_error_index;              // 点误差索引
-extern int nav_error_make_flag;                // 误差生成标志
-extern int nav_calculation_buffer;             // 计算缓冲
-extern float nav_curvature;                    // 曲率
-extern uint8 nav_status_flags;                 // 状态标志
+// 注意：所有数据变量现在都通过 config_navigation.h 系统管理
+// 请使用 #include "config_navigation.h" 来访问这些变量
+// 例如：max_error_point_mem, errors_coords, Mileage_All_sum_list, sum, suml 等
+// 所有不规范变量名都已通过宏定义映射到规范变量
 
 //=================================================函数声明================================================
 //-------------------------------------------------------------------------------------------------------------------

@@ -338,7 +338,7 @@ void nav_data_reset(void);
 #define qulv                            (nav_data.curvature)
 #define qulv_zhijiao                    (nav_data.curvature_straight)
 #define error_make_flag                 (nav_data.error_make_flag)
-#define qulv_yuzhi_chixu_biaozhiwei_hahahahahahahahaha  (nav_data.curvature_threshold_flag)
+#define curvature_threshold_counter  (nav_data.curvature_threshold_flag)
 #define opopop                          (nav_data.straight_angle_flag)
 #define lastopopop                      (nav_data.last_straight_flag)
 #define zheng_reset_state               (nav_data.positive_reset_state)
