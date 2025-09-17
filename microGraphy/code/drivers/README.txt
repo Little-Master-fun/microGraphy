@@ -37,6 +37,21 @@
 *      ? 电机功能测试 (motor_test)
 *      ? 支持枚举类型：电机ID、方向、状态
 * 
+* 3. driver_encoder.h / driver_encoder.c
+*    - 功能：双编码器驱动系统
+*    - 硬件：支持左右两个独立编码器数据采集
+*    - 接口：正交编码器接口 (A/B相)
+*    - 主要功能：
+*      ? 编码器系统初始化 (encoder_init)
+*      ? 编码器数据读取 (encoder_read_data)
+*      ? 脉冲计数获取 (encoder_get_pulse_count)
+*      ? 速度计算和获取 (encoder_get_speed)
+*      ? 里程距离获取 (encoder_get_distance)
+*      ? 数据重置功能 (encoder_reset)
+*      ? 周期数据更新 (encoder_update)
+*      ? 机器人运动信息计算 (encoder_get_robot_velocity)
+*      ? 支持枚举类型：编码器ID、方向、状态
+* 
 * 驱动程序设计原则：
 * 1. 硬件抽象层 (HAL) 设计
 *    - hw_init(): 硬件初始化

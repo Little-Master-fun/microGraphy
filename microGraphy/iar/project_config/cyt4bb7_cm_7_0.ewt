@@ -1440,6 +1440,12 @@
         <group>
             <name>drivers</name>
             <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_encoder.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_encoder.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\code\drivers\driver_motor.c</name>
             </file>
             <file>
@@ -1454,6 +1460,12 @@
         </group>
         <group>
             <name>test</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_encoder.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_encoder.h</name>
+            </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_motor.c</name>
             </file>

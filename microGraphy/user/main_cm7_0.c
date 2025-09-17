@@ -66,7 +66,9 @@ int main(void)
     debug_init();                          // 调试串口信息初始化
     
     // 此处编写用户代码 例如外设初始化代码等
-    test_imu();
+    // test_imu();      //测试陀螺仪
+    // test_motor();    //测试电机
+    // test_encoder();  //测试编码器
 
 
     // uint16_t data[128];

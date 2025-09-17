@@ -187,15 +187,15 @@ int16 motor_pwm_protect(int16 pwm_input)
     }
     // 死区保护（防止电机抖动）
     else if ((pwm_input > -MOTOR_PWM_MIN) && (pwm_input < MOTOR_PWM_MIN))
-    {
-        pwm_output = 0;
-    }
-    else
-    {
-        pwm_output = pwm_input;
-    }
-    
-    return pwm_output;
+      {
+          pwm_output = 0;
+      }
+      else
+      {
+          pwm_output = pwm_input;
+      } 
+      
+      return pwm_output;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
