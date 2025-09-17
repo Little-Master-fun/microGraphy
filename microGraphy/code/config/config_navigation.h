@@ -89,11 +89,41 @@ typedef struct
     // 控制参数
     int control_radius[2];                      // 控制半径 [R1, R2]
     
-    // PID参数
-    float pid_kp;                               // PID比例系数
-    float pid_ki;                               // PID积分系数
-    float pid_kd;                               // PID微分系数
-    int pid_speed;                              // PID速度
+    // 导航PID参数
+    float nav_pid_kp;                           // 导航PID比例系数
+    float nav_pid_ki;                           // 导航PID积分系数
+    float nav_pid_kd;                           // 导航PID微分系数
+    int nav_pid_speed;                          // 导航PID速度
+    
+    // 电机控制PID参数
+    struct {
+        // 左电机速度环PID
+        float left_speed_kp;                    // 左电机速度环比例系数
+        float left_speed_ki;                    // 左电机速度环积分系数
+        float left_speed_kd;                    // 左电机速度环微分系数
+        
+        // 左电机位置环PID
+        float left_position_kp;                 // 左电机位置环比例系数
+        float left_position_ki;                 // 左电机位置环积分系数
+        float left_position_kd;                 // 左电机位置环微分系数
+        
+        // 右电机速度环PID
+        float right_speed_kp;                   // 右电机速度环比例系数
+        float right_speed_ki;                   // 右电机速度环积分系数
+        float right_speed_kd;                   // 右电机速度环微分系数
+        
+        // 右电机位置环PID
+        float right_position_kp;                // 右电机位置环比例系数
+        float right_position_ki;                // 右电机位置环积分系数
+        float right_position_kd;                // 右电机位置环微分系数
+        
+        // 电机控制参数
+        float max_speed;                        // 最大速度限制 (m/s)
+        float max_acceleration;                 // 最大加速度限制 (m/s?)
+        float wheelbase;                        // 轮距 (mm)
+        int control_frequency;                  // 控制频率 (Hz)
+        
+    } motor_control;
     
     // 系统运行参数
     int target_speed;                           // 目标速度
@@ -273,6 +303,56 @@ void nav_config_get_pid(float *kp, float *ki, float *kd, int *speed);
 void nav_config_set_pid(float kp, float ki, float kd, int speed);
 
 //-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取电机控制PID参数
+// 参数说明     motor_id                       电机ID (0=左电机, 1=右电机)
+// 参数说明     pid_type                       PID类型 (0=速度环, 1=位置环)
+// 参数说明     kp                             比例系数指针
+// 参数说明     ki                             积分系数指针
+// 参数说明     kd                             微分系数指针
+// 返回参数     uint8                          获取结果 (0=成功, 1=失败)
+// 使用示例     nav_config_get_motor_pid(0, 0, &kp, &ki, &kd);
+// 备注信息     获取指定电机的PID控制器参数
+//-------------------------------------------------------------------------------------------------------------------
+uint8 nav_config_get_motor_pid(uint8 motor_id, uint8 pid_type, float *kp, float *ki, float *kd);
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     设置电机控制PID参数
+// 参数说明     motor_id                       电机ID (0=左电机, 1=右电机)
+// 参数说明     pid_type                       PID类型 (0=速度环, 1=位置环)
+// 参数说明     kp                             比例系数
+// 参数说明     ki                             积分系数
+// 参数说明     kd                             微分系数
+// 返回参数     uint8                          设置结果 (0=成功, 1=失败)
+// 使用示例     nav_config_set_motor_pid(0, 0, 8.0f, 0.5f, 0.1f);
+// 备注信息     设置指定电机的PID控制器参数
+//-------------------------------------------------------------------------------------------------------------------
+uint8 nav_config_set_motor_pid(uint8 motor_id, uint8 pid_type, float kp, float ki, float kd);
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取电机控制参数
+// 参数说明     max_speed                      最大速度指针 (m/s)
+// 参数说明     max_acceleration               最大加速度指针 (m/s?)
+// 参数说明     wheelbase                      轮距指针 (mm)
+// 参数说明     control_frequency              控制频率指针 (Hz)
+// 返回参数     void
+// 使用示例     nav_config_get_motor_params(&max_speed, &max_acc, &wheelbase, &freq);
+// 备注信息     获取电机控制系统参数
+//-------------------------------------------------------------------------------------------------------------------
+void nav_config_get_motor_params(float *max_speed, float *max_acceleration, float *wheelbase, int *control_frequency);
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     设置电机控制参数
+// 参数说明     max_speed                      最大速度 (m/s)
+// 参数说明     max_acceleration               最大加速度 (m/s?)
+// 参数说明     wheelbase                      轮距 (mm)
+// 参数说明     control_frequency              控制频率 (Hz)
+// 返回参数     void
+// 使用示例     nav_config_set_motor_params(2.0f, 5.0f, 150.0f, 1000);
+// 备注信息     设置电机控制系统参数
+//-------------------------------------------------------------------------------------------------------------------
+void nav_config_set_motor_params(float max_speed, float max_acceleration, float wheelbase, int control_frequency);
+
+//-------------------------------------------------------------------------------------------------------------------
 // 函数简介     导航数据系统初始化
 // 参数说明     void
 // 返回参数     uint8                          初始化结果 (0=成功, 1=失败)
@@ -317,6 +397,33 @@ void nav_data_reset(void);
 
 #define R1  (nav_config.control_radius[0])
 #define R2  (nav_config.control_radius[1])
+
+// 导航PID控制参数（兼容性宏）
+#define PIDG                            (nav_config.nav_pid_kp)     // PID比例系数（兼容性宏）
+#define pid_kp                          (nav_config.nav_pid_kp)
+#define pid_ki                          (nav_config.nav_pid_ki)
+#define pid_kd                          (nav_config.nav_pid_kd)
+#define pid_speed                       (nav_config.nav_pid_speed)
+
+// 电机控制PID参数访问宏
+#define motor_left_speed_kp             (nav_config.motor_control.left_speed_kp)
+#define motor_left_speed_ki             (nav_config.motor_control.left_speed_ki)
+#define motor_left_speed_kd             (nav_config.motor_control.left_speed_kd)
+#define motor_left_position_kp          (nav_config.motor_control.left_position_kp)
+#define motor_left_position_ki          (nav_config.motor_control.left_position_ki)
+#define motor_left_position_kd          (nav_config.motor_control.left_position_kd)
+
+#define motor_right_speed_kp            (nav_config.motor_control.right_speed_kp)
+#define motor_right_speed_ki            (nav_config.motor_control.right_speed_ki)
+#define motor_right_speed_kd            (nav_config.motor_control.right_speed_kd)
+#define motor_right_position_kp         (nav_config.motor_control.right_position_kp)
+#define motor_right_position_ki         (nav_config.motor_control.right_position_ki)
+#define motor_right_position_kd         (nav_config.motor_control.right_position_kd)
+
+#define motor_max_speed                 (nav_config.motor_control.max_speed)
+#define motor_max_acceleration          (nav_config.motor_control.max_acceleration)
+#define motor_wheelbase                 (nav_config.motor_control.wheelbase)
+#define motor_control_frequency         (nav_config.motor_control.control_frequency)
 
 #define finaltarget_speed   (nav_config.target_speed)
 #define fuya                (nav_config.fuya_enable)

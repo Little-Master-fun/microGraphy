@@ -93,11 +93,38 @@ void nav_config_load_default(void)
     nav_config.control_radius[0] = NAV_DEFAULT_R1;
     nav_config.control_radius[1] = NAV_DEFAULT_R2;
     
-    // PID参数默认值
-    nav_config.pid_kp = NAV_DEFAULT_PID_KP;
-    nav_config.pid_ki = NAV_DEFAULT_PID_KI;
-    nav_config.pid_kd = NAV_DEFAULT_PID_KD;
-    nav_config.pid_speed = NAV_DEFAULT_PID_SPEED;
+    // 导航PID参数默认值
+    nav_config.nav_pid_kp = NAV_DEFAULT_PID_KP;
+    nav_config.nav_pid_ki = NAV_DEFAULT_PID_KI;
+    nav_config.nav_pid_kd = NAV_DEFAULT_PID_KD;
+    nav_config.nav_pid_speed = NAV_DEFAULT_PID_SPEED;
+    
+    // 电机控制PID参数默认值
+    // 左电机速度环PID
+    nav_config.motor_control.left_speed_kp = 8.0f;
+    nav_config.motor_control.left_speed_ki = 0.5f;
+    nav_config.motor_control.left_speed_kd = 0.1f;
+    
+    // 左电机位置环PID
+    nav_config.motor_control.left_position_kp = 2.0f;
+    nav_config.motor_control.left_position_ki = 0.1f;
+    nav_config.motor_control.left_position_kd = 0.05f;
+    
+    // 右电机速度环PID
+    nav_config.motor_control.right_speed_kp = 8.0f;
+    nav_config.motor_control.right_speed_ki = 0.5f;
+    nav_config.motor_control.right_speed_kd = 0.1f;
+    
+    // 右电机位置环PID
+    nav_config.motor_control.right_position_kp = 2.0f;
+    nav_config.motor_control.right_position_ki = 0.1f;
+    nav_config.motor_control.right_position_kd = 0.05f;
+    
+    // 电机控制参数默认值
+    nav_config.motor_control.max_speed = 2.0f;          // 最大速度 2m/s
+    nav_config.motor_control.max_acceleration = 5.0f;   // 最大加速度 5m/s?
+    nav_config.motor_control.wheelbase = 150.0f;        // 轮距 150mm
+    nav_config.motor_control.control_frequency = 1000;  // 控制频率 1KHz
     
     // 系统运行参数默认值
     nav_config.target_speed = NAV_DEFAULT_TARGET_SPEED;
@@ -202,10 +229,10 @@ uint8 nav_config_set_control_radius(uint8 radius_index, int radius)
 //-------------------------------------------------------------------------------------------------------------------
 void nav_config_get_pid(float *kp, float *ki, float *kd, int *speed)
 {
-    if (kp != NULL) *kp = nav_config.pid_kp;
-    if (ki != NULL) *ki = nav_config.pid_ki;
-    if (kd != NULL) *kd = nav_config.pid_kd;
-    if (speed != NULL) *speed = nav_config.pid_speed;
+    if (kp != NULL) *kp = nav_config.nav_pid_kp;
+    if (ki != NULL) *ki = nav_config.nav_pid_ki;
+    if (kd != NULL) *kd = nav_config.nav_pid_kd;
+    if (speed != NULL) *speed = nav_config.nav_pid_speed;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -213,10 +240,10 @@ void nav_config_get_pid(float *kp, float *ki, float *kd, int *speed)
 //-------------------------------------------------------------------------------------------------------------------
 void nav_config_set_pid(float kp, float ki, float kd, int speed)
 {
-    nav_config.pid_kp = kp;
-    nav_config.pid_ki = ki;
-    nav_config.pid_kd = kd;
-    nav_config.pid_speed = speed;
+    nav_config.nav_pid_kp = kp;
+    nav_config.nav_pid_ki = ki;
+    nav_config.nav_pid_kd = kd;
+    nav_config.nav_pid_speed = speed;
     nav_config.config_modified = 1;  // 标记配置已修改
 }
 
@@ -246,16 +273,16 @@ static uint8 nav_config_validate(void)
         }
     }
     
-    // 检查PID参数范围
-    if (nav_config.pid_kp < 0.0f || nav_config.pid_kp > 100.0f ||
-        nav_config.pid_ki < 0.0f || nav_config.pid_ki > 100.0f ||
-        nav_config.pid_kd < 0.0f || nav_config.pid_kd > 100.0f)
+    // 检查导航PID参数范围
+    if (nav_config.nav_pid_kp < 0.0f || nav_config.nav_pid_kp > 100.0f ||
+        nav_config.nav_pid_ki < 0.0f || nav_config.nav_pid_ki > 100.0f ||
+        nav_config.nav_pid_kd < 0.0f || nav_config.nav_pid_kd > 100.0f)
     {
         return 1;  // PID参数超出范围
     }
     
     // 检查速度参数范围（示例：0 到 500）
-    if (nav_config.pid_speed < 0 || nav_config.pid_speed > 500 ||
+    if (nav_config.nav_pid_speed < 0 || nav_config.nav_pid_speed > 500 ||
         nav_config.target_speed < 0 || nav_config.target_speed > 500)
     {
         return 1;  // 速度参数超出范围
@@ -285,17 +312,17 @@ static void nav_config_apply_limits(void)
         if (nav_config.control_radius[i] > 100) nav_config.control_radius[i] = 100;
     }
     
-    // 限制PID参数范围
-    if (nav_config.pid_kp < 0.0f) nav_config.pid_kp = 0.0f;
-    if (nav_config.pid_kp > 100.0f) nav_config.pid_kp = 100.0f;
-    if (nav_config.pid_ki < 0.0f) nav_config.pid_ki = 0.0f;
-    if (nav_config.pid_ki > 100.0f) nav_config.pid_ki = 100.0f;
-    if (nav_config.pid_kd < 0.0f) nav_config.pid_kd = 0.0f;
-    if (nav_config.pid_kd > 100.0f) nav_config.pid_kd = 100.0f;
+    // 限制导航PID参数范围
+    if (nav_config.nav_pid_kp < 0.0f) nav_config.nav_pid_kp = 0.0f;
+    if (nav_config.nav_pid_kp > 100.0f) nav_config.nav_pid_kp = 100.0f;
+    if (nav_config.nav_pid_ki < 0.0f) nav_config.nav_pid_ki = 0.0f;
+    if (nav_config.nav_pid_ki > 100.0f) nav_config.nav_pid_ki = 100.0f;
+    if (nav_config.nav_pid_kd < 0.0f) nav_config.nav_pid_kd = 0.0f;
+    if (nav_config.nav_pid_kd > 100.0f) nav_config.nav_pid_kd = 100.0f;
     
     // 限制速度参数范围
-    if (nav_config.pid_speed < 0) nav_config.pid_speed = 0;
-    if (nav_config.pid_speed > 500) nav_config.pid_speed = 500;
+    if (nav_config.nav_pid_speed < 0) nav_config.nav_pid_speed = 0;
+    if (nav_config.nav_pid_speed > 500) nav_config.nav_pid_speed = 500;
     if (nav_config.target_speed < 0) nav_config.target_speed = 0;
     if (nav_config.target_speed > 500) nav_config.target_speed = 500;
 }
@@ -347,4 +374,156 @@ void nav_data_reset(void)
     memset(nav_errors_coords, 0, sizeof(nav_errors_coords));
     memset(nav_mileage_list, 0, sizeof(nav_mileage_list));
     // 注意：yaw_buffer 不清零，可能需要保留历史数据
+}
+
+//=================================================电机控制PID参数访问函数================================================
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取电机控制PID参数
+//-------------------------------------------------------------------------------------------------------------------
+uint8 nav_config_get_motor_pid(uint8 motor_id, uint8 pid_type, float *kp, float *ki, float *kd)
+{
+    if (kp == NULL || ki == NULL || kd == NULL)
+    {
+        return 1;
+    }
+    
+    if (motor_id == 0)  // 左电机
+    {
+        if (pid_type == 0)  // 速度环
+        {
+            *kp = nav_config.motor_control.left_speed_kp;
+            *ki = nav_config.motor_control.left_speed_ki;
+            *kd = nav_config.motor_control.left_speed_kd;
+        }
+        else if (pid_type == 1)  // 位置环
+        {
+            *kp = nav_config.motor_control.left_position_kp;
+            *ki = nav_config.motor_control.left_position_ki;
+            *kd = nav_config.motor_control.left_position_kd;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    else if (motor_id == 1)  // 右电机
+    {
+        if (pid_type == 0)  // 速度环
+        {
+            *kp = nav_config.motor_control.right_speed_kp;
+            *ki = nav_config.motor_control.right_speed_ki;
+            *kd = nav_config.motor_control.right_speed_kd;
+        }
+        else if (pid_type == 1)  // 位置环
+        {
+            *kp = nav_config.motor_control.right_position_kp;
+            *ki = nav_config.motor_control.right_position_ki;
+            *kd = nav_config.motor_control.right_position_kd;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        return 1;
+    }
+    
+    return 0;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     设置电机控制PID参数
+//-------------------------------------------------------------------------------------------------------------------
+uint8 nav_config_set_motor_pid(uint8 motor_id, uint8 pid_type, float kp, float ki, float kd)
+{
+    if (motor_id == 0)  // 左电机
+    {
+        if (pid_type == 0)  // 速度环
+        {
+            nav_config.motor_control.left_speed_kp = kp;
+            nav_config.motor_control.left_speed_ki = ki;
+            nav_config.motor_control.left_speed_kd = kd;
+        }
+        else if (pid_type == 1)  // 位置环
+        {
+            nav_config.motor_control.left_position_kp = kp;
+            nav_config.motor_control.left_position_ki = ki;
+            nav_config.motor_control.left_position_kd = kd;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    else if (motor_id == 1)  // 右电机
+    {
+        if (pid_type == 0)  // 速度环
+        {
+            nav_config.motor_control.right_speed_kp = kp;
+            nav_config.motor_control.right_speed_ki = ki;
+            nav_config.motor_control.right_speed_kd = kd;
+        }
+        else if (pid_type == 1)  // 位置环
+        {
+            nav_config.motor_control.right_position_kp = kp;
+            nav_config.motor_control.right_position_ki = ki;
+            nav_config.motor_control.right_position_kd = kd;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        return 1;
+    }
+    
+    // 标记配置已修改
+    nav_config.config_modified = 1;
+    
+    return 0;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取电机控制参数
+//-------------------------------------------------------------------------------------------------------------------
+void nav_config_get_motor_params(float *max_speed, float *max_acceleration, float *wheelbase, int *control_frequency)
+{
+    if (max_speed != NULL)
+    {
+        *max_speed = nav_config.motor_control.max_speed;
+    }
+    
+    if (max_acceleration != NULL)
+    {
+        *max_acceleration = nav_config.motor_control.max_acceleration;
+    }
+    
+    if (wheelbase != NULL)
+    {
+        *wheelbase = nav_config.motor_control.wheelbase;
+    }
+    
+    if (control_frequency != NULL)
+    {
+        *control_frequency = nav_config.motor_control.control_frequency;
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     设置电机控制参数
+//-------------------------------------------------------------------------------------------------------------------
+void nav_config_set_motor_params(float max_speed, float max_acceleration, float wheelbase, int control_frequency)
+{
+    nav_config.motor_control.max_speed = max_speed;
+    nav_config.motor_control.max_acceleration = max_acceleration;
+    nav_config.motor_control.wheelbase = wheelbase;
+    nav_config.motor_control.control_frequency = control_frequency;
+    
+    // 标记配置已修改
+    nav_config.config_modified = 1;
 }
