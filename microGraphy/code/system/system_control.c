@@ -11,7 +11,7 @@
 #include "motor_control.h"
 #include "navigation_flash_improved.h"
 #include "zf_device_systick.h"
-#include "ipc_protocol.h"
+#include "ipc/ipc_protocol.h"
 
 //-------------------------------------------------------------------------------------------------------------------
 // 内部变量
@@ -22,6 +22,10 @@ static system_state_enum s_current_state = SYS_STATE_INIT;
 
 // 用于缓存从M7_1接收到的最新车辆状态
 static VehicleState s_vehicle_state_cache;
+
+// 路径跟踪定时控制 (20ms)
+static uint32_t s_last_path_tracking_time = 0;
+#define PATH_TRACKING_PERIOD_MS (20)
 
 // IPC接收状态机
 typedef enum {
@@ -38,6 +42,7 @@ static ipc_rx_state_enum s_ipc_rx_state = IPC_RX_STATE_WAIT_ID;
 // 内部函数声明
 //-------------------------------------------------------------------------------------------------------------------
 static void m7_0_ipc_callback(uint32_t receive_data);
+static void send_motion_command_to_m7_1(float linear_speed, float angular_speed);
 
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -49,7 +54,6 @@ void system_control_init(void)
     // 初始化硬件驱动和功能模块
     systick_init();
     ui_init();
-    motor_control_init();
     Navigation_Init();
     ipc_communicate_init(IPC_PORT_1, m7_0_ipc_callback);
     
@@ -80,9 +84,18 @@ void system_control_update(void)
             
         case SYS_STATE_PATH_FOLLOWING:
         {
-            // M7_0不再自己计算状态，而是直接使用从M7_1接收到的最新状态 s_vehicle_state_cache
-            MotionCommand motion_cmd = Navigation_PathTrack(&s_vehicle_state_cache);
-            motor_set_robot_motion(motion_cmd.desired_linear_speed, motion_cmd.desired_angular_speed);
+            // 20ms定时执行路径跟踪算法
+            uint32_t current_time = systick_get_time_ms();
+            if(current_time - s_last_path_tracking_time >= PATH_TRACKING_PERIOD_MS)
+            {
+                s_last_path_tracking_time = current_time;
+                
+                // 基于M7_1发送的最新状态执行路径跟踪
+                MotionCommand motion_cmd = Navigation_PathTrack(&s_vehicle_state_cache);
+                
+                // 将运动指令发送给M7_1执行
+                send_motion_command_to_m7_1(motion_cmd.desired_linear_speed, motion_cmd.desired_angular_speed);
+            }
         }
             break;
             
@@ -151,4 +164,25 @@ static void m7_0_ipc_callback(uint32_t receive_data)
             s_ipc_rx_state = IPC_RX_STATE_WAIT_ID; // 复位状态机，等待下一包数据
             break;
     }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 内部辅助函数
+//-------------------------------------------------------------------------------------------------------------------
+
+// 通过IPC发送运动指令给M7_1
+static void send_motion_command_to_m7_1(float linear_speed, float angular_speed)
+{
+    ipc_data_converter_t converter;
+    
+    // 发送消息ID
+    ipc_send_data(IPC_ID_MOTION_COMMAND);
+    
+    // 发送线速度
+    converter.f32 = linear_speed;
+    ipc_send_data(converter.u32);
+    
+    // 发送角速度
+    converter.f32 = angular_speed;
+    ipc_send_data(converter.u32);
 }

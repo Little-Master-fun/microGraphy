@@ -41,10 +41,17 @@
 #include "driver_sch16tk10.h"
 #include "driver_encoder.h"
 #include "state_estimator.h"
-#include "ipc_protocol.h"
+#include "ipc/ipc_protocol.h"
+#include "motor_control.h"
 
-// 定义状态估计的周期 (ms)
-#define ESTIMATOR_UPDATE_PERIOD_MS (2)
+// 定义时序周期 (ms)
+#define ESTIMATOR_UPDATE_PERIOD_MS (2)  // PIT_CH0: 状态估计
+#define MOTOR_CONTROL_PERIOD_MS (5)     // PIT_CH10: 电机控制
+
+// 外部变量声明 (来自main_cm7_1.c)
+extern volatile float s_target_linear_speed;
+extern volatile float s_target_angular_speed;
+extern volatile bool s_motion_command_updated;
 
 void pit0_ch0_isr(void)
 {
@@ -89,10 +96,20 @@ void pit0_ch2_isr()                     // 定时器通道 2 周期中断服务函数
 		
 }
 
-void pit0_ch10_isr()                    // 定时器通道 10 周期中断服务函数      
+void pit0_ch10_isr()                    // 定时器通道 10 周期中断服务函数 - 电机控制闭环
 {
     pit_isr_flag_clear(PIT_CH10);
-	
+    
+    // 高频电机控制闭环 (5ms)
+    if(s_motion_command_updated)
+    {
+        // 设置新的运动目标
+        motor_set_robot_motion(s_target_linear_speed, s_target_angular_speed);
+        s_motion_command_updated = false;
+    }
+    
+    // 执行电机PID控制
+    motor_control_update();
 }
 
 void pit0_ch11_isr()                    // 定时器通道 11 周期中断服务函数      
