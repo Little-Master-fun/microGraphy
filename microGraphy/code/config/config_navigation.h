@@ -504,4 +504,9 @@ void nav_data_reset(void);
 // #define qulvzhe                         (nav_data.curvature)
 // #define Qulv                            (nav_data.curvature)
 
-#endif
+//================================================= 全局访问接口 =================================================
+nav_config_struct* nav_config_get(void);
+nav_data_struct* nav_data_get(void);
+
+
+#endif // _CONFIG_NAVIGATION_H_

@@ -1451,6 +1451,12 @@
             <file>
                 <name>$PROJ_DIR$\..\..\code\control\motor_control.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\system\system_control.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\system\system_control.h</name>
+            </file>
             <configuration>
                 <name>Debug</name>
             </configuration>
@@ -1480,6 +1486,12 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\stroage\flash_road.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\libraries\zf_device\zf_device_systick.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\libraries\zf_device\zf_device_systick.h</name>
             </file>
         </group>
         <group>
@@ -1535,6 +1547,15 @@
             <file>
                 <name>$PROJ_DIR$\..\..\code\ui\show_ips_ljmnb_improved.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\ui\ui_manager.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\ui\ui_manager.h</name>
+            </file>
+            <configuration>
+                <name>Debug</name>
+            </configuration>
         </group>
         <file>
             <name>$PROJ_DIR$\..\..\code\本文件夹作用.txt</name>

@@ -517,13 +517,23 @@ void nav_config_get_motor_params(float *max_speed, float *max_acceleration, floa
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     设置电机控制参数
 //-------------------------------------------------------------------------------------------------------------------
-void nav_config_set_motor_params(float max_speed, float max_acceleration, float wheelbase, int control_frequency)
+void nav_config_set_motor_params(float max_speed, float max_accel, float wheelbase, int control_frequency)
 {
     nav_config.motor_control.max_speed = max_speed;
-    nav_config.motor_control.max_acceleration = max_acceleration;
+    nav_config.motor_control.max_acceleration = max_accel;
     nav_config.motor_control.wheelbase = wheelbase;
     nav_config.motor_control.control_frequency = control_frequency;
     
     // 标记配置已修改
     nav_config.config_modified = 1;
+}
+
+nav_config_struct* nav_config_get(void)
+{
+    return &nav_config;
+}
+
+nav_data_struct* nav_data_get(void)
+{
+    return &nav_data;
 }

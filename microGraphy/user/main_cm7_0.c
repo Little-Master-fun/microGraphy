@@ -34,136 +34,23 @@
 ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"
-#include "test_common_headfile.h"
-// 打开新的工程或者工程移动了位置务必执行以下操作
-// 第一步 关闭上面所有打开的文件
-// 第二步 project->clean  等待下方进度条走完
-
-// *************************** 例程硬件连接说明 ***************************
-//      模块管脚            单片机管脚
-//      SCL                 查看 zf_device_ips114.h 中 IPS114_SCL_PIN 宏定义
-//      SDA                 查看 zf_device_ips114.h 中 IPS114_SDA_PIN 宏定义
-//      RES                 查看 zf_device_ips114.h 中 IPS114_RST_PIN 宏定义
-//      DC                  查看 zf_device_ips114.h 中 IPS114_DC_PIN  宏定义
-//      CS                  查看 zf_device_ips114.h 中 IPS114_CS_PIN  宏定义
-//      BL                  查看 zf_device_ips114.h 中 IPS114_BLK_PIN 宏定义
-//      GND                 核心板电源地 GND
-//      3V3                 核心板 3V3 电源
 
 
-
-// *************************** 例程测试说明 ***************************
-// 1.核心板烧录本例程 插在主板上 1.14寸IPS 显示模块插在主板的屏幕接口排座上 请注意引脚对应 不要插错
-// 2.电池供电 上电后 1.14寸IPS 屏幕亮起 显示字符数字浮点数和波形图
-// 如果发现现象与说明严重不符 请参照本文件最下方 例程常见问题说明 进行排查
-
-
-// **************************** 代码区域 ****************************
+#include "system_control.h" // 引入新的主控模块
 
 int main(void)
 {
-    clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
-    debug_init();                          // 调试串口信息初始化
+    // 初始化系统时钟
+    clock_init(SYSTEM_CLOCK_250M);          
     
-    // 此处编写用户代码 例如外设初始化代码等
-    // test_imu();      //测试陀螺仪
-     //test_motor();    //测试电机
-     //test_encoder();  //测试编码器
-    test_motor_control();
-
-
-    // uint16_t data[128];
-    // int16_t data_index = 0;
-    // for( ; data_index < 64; data_index ++)
-    //    data[data_index] = data_index;
-    // for(data_index = 64; data_index < 128; data_index ++)
-    //    data[data_index] = 128 - data_index;
-
-    // ips114_set_dir(IPS114_PORTAIT);
-    // ips114_set_color(RGB565_RED, RGB565_BLACK);
-    // ips114_init();
-
-    // // 此处编写用户代码 例如外设初始化代码等
+    // 初始化所有模块并进入主状态机
+    system_control_init();
+    
+    // 主循环
     while(true)
     {
-    //     // 此处编写需要循环执行的代码
-
-    //     ips114_clear();
-    //     ips114_show_rgb565_image(0, 27, (const uint16 *)gImage_seekfree_logo, 240, 80, 240, 80, 0); // 显示一个RGB565色彩图片 原图240*80 显示240*80 低位在前
-    //     system_delay_ms(1500);
-
-    //     ips114_full(RGB565_GRAY);
-    //     ips114_show_string( 0 , 16*1,   "SEEKFREE");                            // 显示字符串
-    //     ips114_show_chinese(80, 16*1,   16, (const uint8 *)chinese_test, 4, RGB565_BLUE);           // 显示汉字
-
-    //     // 显示的 flaot 数据 最多显示 8bit 位整数 最多显示 6bit 位小数
-    //     ips114_show_float(  0 , 16*2,   -13.141592,     1, 6);                  // 显示 float 数据 1bit 整数 6bit 小数 应当显示 -3.141592 总共会有 9 个字符的显示占位
-    //     ips114_show_float(  80, 16*2,   13.141592,      8, 4);                  // 显示 float 数据 8bit 整数 4bit 小数 应当显示 13.1415 总共会有 14 个字符的显示占位 后面会有 5 个字符的空白占位
-
-    //     ips114_show_int(    0 , 16*3,   -127,           2);                     // 显示 int8 数据
-    //     ips114_show_uint(   80, 16*3,   255,            4);                     // 显示 uint8 数据
-
-    //     ips114_show_int(    0 , 16*4,   -32768,         4);                     // 显示 int16 数据
-    //     ips114_show_uint(   80, 16*4,   65535,          6);                     // 显示 uint16 数据
-
-    //     ips114_show_int(    0 , 16*5,   -2147483648,    8);                     // 显示 int32 数据 8bit 整数 应当显示 -47483648
-    //     ips114_show_uint(   0 , 16*6,   4294967295,     8);                     // 显示 uint32 数据 10bit 整数 应当显示 4294967295
-
-    //     system_delay_ms(1000);
-
-    //     ips114_full(RGB565_GRAY);
-    //     ips114_show_wave(88, 51, data, 128, 64,  64, 32);                       // 显示一个三角波形 波形宽度 128 波形最大值 64 显示宽度 64 显示最大值 32
-    //     system_delay_ms(1000);
-    //     ips114_full(RGB565_GRAY);
-    //     ips114_show_wave(56, 35, data, 128, 64, 128, 64);                       // 显示一个三角波形 波形宽度 128 波形最大值 64 显示宽度 128 显示最大值 64
-    //     system_delay_ms(1000);
-
-    //     // 使用画线函数 从顶上两个角画射线
-    //     ips114_clear();
-    //     for(data_index = 0; data_index < 240; data_index += 10)
-    //     {
-    //        ips114_draw_line(0, 0, data_index, 135 - 1, RGB565_66CCFF);
-    //        system_delay_ms(20);
-    //     }
-    //     ips114_draw_line(0, 0, 240 - 1, 135 - 1, RGB565_66CCFF);
-    //     for(data_index = 130; data_index >= 0; data_index -= 10)
-    //     {
-    //        ips114_draw_line(0, 0, 240 - 1, data_index, RGB565_66CCFF);
-    //        system_delay_ms(20);
-    //     }
-
-    //     ips114_draw_line(240 - 1, 0, 239, 135 - 1, RGB565_66CCFF);
-    //     for(data_index = 230; data_index >= 0; data_index -= 10)
-    //     {
-    //        ips114_draw_line(240 - 1, 0, data_index, 135 - 1, RGB565_66CCFF);
-    //        system_delay_ms(20);
-    //     }
-    //     ips114_draw_line(240 - 1, 0, 0, 135 - 1, RGB565_66CCFF);
-    //     for(data_index = 130; data_index >= 0; data_index -= 10)
-    //     {
-    //        ips114_draw_line(240 - 1, 0, 0, data_index, RGB565_66CCFF);
-    //        system_delay_ms(20);
-    //     }
-    //     system_delay_ms(1000);
-
-    //     ips114_full(RGB565_RED);
-    //     system_delay_ms(500);
-    //     ips114_full(RGB565_GREEN);
-    //     system_delay_ms(500);
-    //     ips114_full(RGB565_BLUE);
-    //     system_delay_ms(500);
-    //     ips114_full(RGB565_WHITE);
-    //     system_delay_ms(500);
-
-    //     // 此处编写需要循环执行的代码
+        // 循环调用主状态机更新函数
+        // 这是驱动整个应用程序运行的唯一入口
+        system_control_update();
     }
 }
-
-// **************************** 代码区域 ****************************
-// *************************** 例程常见问题说明 ***************************
-// 遇到问题时请按照以下问题检查列表检查
-// 问题1：屏幕不显示
-//      如果使用主板测试，主板必须要用电池供电 检查屏幕供电引脚电压
-//      检查屏幕是不是插错位置了 检查引脚对应关系
-//      如果对应引脚都正确 检查一下是否有引脚波形不对 需要有示波器
-//      无法完成波形测试则复制一个GPIO例程将屏幕所有IO初始化为GPIO翻转电平 看看是否受控

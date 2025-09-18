@@ -1,299 +1,219 @@
 /*********************************************************************************************************************
 * 文件名称          navigation_flash_improved.c
-* 功能说明          改进版导航Flash系统实现文件
+* 功能说明          【重构版】导航与路径跟踪系统 实现文件
 * 作者              AI Assistant
-* 版本信息          v2.0
+* 版本信息          v3.0
 * 修改记录
-* 日期              作者                备注
-* 2024-XX-XX        AI Assistant        重构导航模块，规范变量命名，移除UI依赖
+* 日期              作者                版本              备注
+* 2024-XX-XX        AI Assistant        v3.0              整合状态估计与路径跟踪控制逻辑
 *
 * 文件作用说明：
-* 本文件为改进版的导航Flash系统实现文件，通过配置系统统一管理参数和数据
-* 规范了变量命名，移除了与UI模块的直接依赖，提高了代码的可维护性
-*
-* 主要改进：
-* 1. 规范化变量命名，移除不规范的变量名
-* 2. 通过配置系统统一管理数据
-* 3. 移除了与UI模块的循环依赖
-* 4. 保持了向后兼容性
-* 5. 提高了代码的可读性和维护性
+* 本文件实现了导航系统的核心功能，包括状态估计、路径管理和路径跟踪控制。
+* 通过模块化的函数设计，将复杂的导航任务分解为清晰的步骤。
 ********************************************************************************************************************/
 
-#include "zf_common_headfile.h"
 #include "navigation_flash_improved.h"
-#include "config_navigation.h"    // 包含配置系统，获取所有数据变量访问权限
+#include "driver_sch16tk10.h"
+#include "driver_encoder.h"
 
-//=================================================全局变量定义================================================
-nav_system_struct nav_system = {0};            // 导航系统结构体
+//================================================= 宏定义 =================================================
+#define DEG_TO_RAD(deg) ((deg) * (M_PI / 180.0f))
+#define RAD_TO_DEG(rad) ((rad) * (180.0f / M_PI))
 
-// 注意：所有数据变量现在都通过 config_navigation 系统管理
-// 不再在这里定义局部变量，直接使用宏定义访问配置系统
+//================================================= 全局变量定义 =================================================
+NavigationSystem g_nav_system;
 
-//=================================================内部函数声明================================================
-static void nav_update_curvature_state_machine(void);
-static void nav_calculate_path_tracking_output(void);
-static void nav_process_curvature_threshold(void);
-static float nav_calculate_curvature_value(float theta1, float theta2, float theta3, int d12, int d23);
+//================================================= 内部函数声明 =================================================
+static float calculate_curvature_from_points(const OptimalPathPoint* p1, const OptimalPathPoint* p2, const OptimalPathPoint* p3);
+static float normalize_angle(float angle);
 
-//=================================================主要接口函数================================================
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航系统初始化
-//-------------------------------------------------------------------------------------------------------------------
-uint8 nav_system_init(void)
+//================================================================================================================
+//========================================= 核心功能函数实现 =====================================================
+//================================================================================================================
+
+void Navigation_Init(void)
 {
-    // 初始化配置系统
-    nav_config_init();
-    nav_data_init();
+    memset(&g_nav_system, 0, sizeof(NavigationSystem));
     
-    // 初始化导航系统结构体
-    memset(&nav_system, 0, sizeof(nav_system_struct));
+    // 初始化状态
+    g_nav_system.state.x = 0;
+    g_nav_system.state.y = 0;
+    g_nav_system.state.heading = DEG_TO_RAD(90.0f); // 假设初始朝向Y轴正方向
     
-    // 设置初始值
-    max_error_point_mem = NAV_COORD_RECORD_SIZE;
-    
-    return 0;
+    g_nav_system.initialized = true;
 }
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航数据保存
-//-------------------------------------------------------------------------------------------------------------------
-void nav_data_save(void)
+void Navigation_UpdateState(float dt)
 {
-    // 更新里程计数
-    nav_system.mileage_total += (encoder_sum_nav + encoder_left_nav) / 2;
-    Mileage_All_sum += (encoder_sum_nav + encoder_left_nav) / 2;
+    if (!g_nav_system.initialized) return;
+
+    // 1. 从编码器获取轮速
+    float left_speed = encoder_get_speed(ENCODER_ID_LEFT);
+    float right_speed = encoder_get_speed(ENCODER_ID_RIGHT);
+
+    // 2. 计算车辆的线速度和角速度
+    g_nav_system.state.linear_speed = (left_speed + right_speed) / 2.0f;
     
-    // 保存当前数据到数组
-    if (actual_error_point < NAV_COORD_RECORD_SIZE)
-    {
-        Mileage_All_sum_list[actual_error_point] = Mileage_All_sum;
-        errors_coords[actual_error_point] = error_dir;
-        actual_error_point++;
-    }
-    
-    // 更新最大误差点计数
-    if (actual_error_point > max_error_point_mem)
-    {
-        max_error_point_mem = actual_error_point;
-    }
+    // 3. 从IMU获取角速度
+    SCH1_raw_data imu_raw;
+    SCH1_result imu_data;
+    SCH1_getData(&imu_raw);
+    SCH1_convert_data(&imu_raw, &imu_data);
+    float omega_imu = -DEG_TO_RAD(imu_data.Rate1[2]); // Z轴角速度, 注意方向可能需要取反
+
+    // 4. 积分更新位置和姿态 (航位推算)
+    float speed_mm_s = g_nav_system.state.linear_speed * 1000.0f;
+    g_nav_system.state.x += speed_mm_s * cosf(g_nav_system.state.heading) * dt;
+    g_nav_system.state.y += speed_mm_s * sinf(g_nav_system.state.heading) * dt;
+    g_nav_system.state.heading += omega_imu * dt;
+    g_nav_system.state.heading = normalize_angle(g_nav_system.state.heading);
 }
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航数据重新保存
-//-------------------------------------------------------------------------------------------------------------------
-void nav_data_resave(void)
+MotionCommand Navigation_PathTrack(void)
 {
-    Mileage_All_sum += (encoder_sum_nav + encoder_left_nav) / 2;
-    
-    int search_start = (point_error_index >= 10) ? point_error_index - 10 : 0;
-    
-    // 处理曲率阈值
-    nav_process_curvature_threshold();
-    
-    // 搜索匹配的误差点
-    for (int i = search_start; i < max_error_point_mem; i++)
+    MotionCommand cmd = {0};
+    if (!g_nav_system.initialized || g_nav_system.path_point_count == 0)
     {
-        float threshold_offset = 0.0f;
-        
-        if (fabs(qulv) > 50)
-        {
-            curvature_threshold_counter++;
-            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 16 - 0.2) * 
-                              ((encoder_sum_nav + encoder_left_nav) / 2 - 50) / 150.0f;
+        return cmd;
+    }
+    
+    VehicleState* state = &g_nav_system.state;
+    OptimalPathPoint* path = g_nav_system.path;
+
+    // 1. 查找路径上最近的点
+    int closest_point_idx = 0;
+    float min_dist_sq = 1e10f;
+    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
+        float dx = path[i].x - state->x;
+        float dy = path[i].y - state->y;
+        float dist_sq = dx * dx + dy * dy;
+        if (dist_sq < min_dist_sq) {
+            min_dist_sq = dist_sq;
+            closest_point_idx = i;
         }
-        else
-        {
-            lastopopop = 0;
-            threshold_offset = NAV_SET_MILEAGE * 2 * (fabs(qulv) / 70 + 9.0f / 7) * 
-                              (((encoder_sum_nav + encoder_left_nav) / 2 - 150) / 116.0f);
-        }
-        
-        if (Mileage_All_sum_list[i] >= (Mileage_All_sum + threshold_offset))
-        {
-            point_error_index = i;
+    }
+
+    // 2. 查找前瞻目标点
+    int target_idx = closest_point_idx;
+    float lookahead_dist_sq = NAV_LOOKAHEAD_DISTANCE * NAV_LOOKAHEAD_DISTANCE;
+    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
+        int check_idx = (closest_point_idx + i) % g_nav_system.path_point_count;
+        float dx = path[check_idx].x - state->x;
+        float dy = path[check_idx].y - state->y;
+        if (dx * dx + dy * dy > lookahead_dist_sq) {
+            target_idx = check_idx;
             break;
         }
-        cnmb = i;
+    }
+    OptimalPathPoint* target_point = &path[target_idx];
+
+    // ===== Stanley 控制律核心 =====
+    // 3. 计算航向误差
+    float heading_error = normalize_angle(target_point->heading - state->heading);
+
+    // 4. 计算横向误差
+    float dx_path = target_point->x - state->x;
+    float dy_path = target_point->y - state->y;
+    float lateral_error = -dx_path * sinf(target_point->heading) + dy_path * cosf(target_point->heading);
+    
+    // 5. 航向误差的反馈控制
+    float steering_angle_heading = heading_error;
+
+    // 6. 横向误差的反馈控制
+    float steering_angle_lateral = atan2f(NAV_STANLEY_LATERAL_GAIN * lateral_error, state->linear_speed * 1000.0f + 1e-6);
+    
+    // 7. 组合最终转向角
+    float steering_angle = steering_angle_heading + steering_angle_lateral;
+
+    // 8. 将转向角转换为期望角速度
+    cmd.desired_angular_speed = state->linear_speed * tanf(steering_angle) / (NAV_WHEELBASE / 1000.0f);
+
+    // 9. 设定期望线速度
+    cmd.desired_linear_speed = target_point->reference_speed;
+    
+    return cmd;
+}
+
+
+void Navigation_SetPath(const OptimalPathPoint* new_path, uint16_t point_count)
+{
+    if (point_count > NAV_MAX_PATH_POINTS) {
+        point_count = NAV_MAX_PATH_POINTS;
+    }
+    memcpy(g_nav_system.path, new_path, sizeof(OptimalPathPoint) * point_count);
+    g_nav_system.path_point_count = point_count;
+}
+
+void Navigation_GenerateTestPath(float size_mm, uint16_t point_count)
+{
+    if (point_count > NAV_MAX_PATH_POINTS) {
+        point_count = NAV_MAX_PATH_POINTS;
     }
     
-    // 重置阈值标志
-    if (curvature_threshold_counter == 2)
-    {
-        curvature_threshold_counter = 0;
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     计算曲率
-//-------------------------------------------------------------------------------------------------------------------
-double nav_calculate_curvature(float theta1, float theta2, float theta3, int distance12, int distance23)
-{
-    return nav_calculate_curvature_value(theta1, theta2, theta3, distance12, distance23);
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     获取最大值
-//-------------------------------------------------------------------------------------------------------------------
-double nav_get_max_value(double value_a, double value_b)
-{
-    return (value_a > value_b) ? value_a : value_b;
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     获取绝对值
-//-------------------------------------------------------------------------------------------------------------------
-double nav_get_absolute_value(double value)
-{
-    return (value < 0) ? -value : value;
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航路径跟踪
-//-------------------------------------------------------------------------------------------------------------------
-float nav_path_tracking(void)
-{
-    nav_calculate_path_tracking_output();
-    return nav_system.final_output;
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航系统状态更新
-//-------------------------------------------------------------------------------------------------------------------
-void nav_system_update(void)
-{
-    // 更新导航系统状态
-    nav_update_curvature_state_machine();
+    OptimalPathPoint temp_path[NAV_MAX_PATH_POINTS];
+    const float half_size = size_mm / 2.0f;
     
-    // 更新角度信息
-    nav_system.angle_current = rt_yaw;
-    nav_system.angle_reference = Last_Nag_yaw;
-    
-    // 计算误差
-    nav_system.error_value = nav_calculate_error(nav_system.angle_current, nav_system.angle_reference);
-}
+    const float corners[4][2] = {
+        {half_size, -half_size}, {half_size, half_size},
+        {-half_size, half_size}, {-half_size, -half_size}
+    };
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航误差计算
-//-------------------------------------------------------------------------------------------------------------------
-float nav_calculate_error(float current_position, float target_position)
-{
-    return target_position - current_position;
-}
+    int point_index = 0;
+    int points_per_side = point_count / 4;
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     导航参数更新
-//-------------------------------------------------------------------------------------------------------------------
-void nav_update_parameters(void)
-{
-    // 从配置系统更新参数
-    // 这里可以添加参数同步逻辑
-}
+    for (int side = 0; side < 4; ++side) {
+        float start_x = corners[side][0];
+        float start_y = corners[side][1];
+        float end_x = corners[(side + 1) % 4][0];
+        float end_y = corners[(side + 1) % 4][1];
 
-//=================================================内部函数实现================================================
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     更新曲率状态机
-//-------------------------------------------------------------------------------------------------------------------
-static void nav_update_curvature_state_machine(void)
-{
-    // 实现曲率状态机逻辑
-    if (qulv > 40)
-    {
-        was_high = true;
-        if (zheng_reset_state == 0)
-        {
-            zheng_reset_state = 1;
-        }
-    }
-    else if (qulv < -40)
-    {
-        was_low = true;
-        if (fu_reset_state == 0)
-        {
-            fu_reset_state = 1;
-        }
-    }
-    else if (qulv >= 0 && qulv <= 20)
-    {
-        if (was_high)
-        {
-            high_to_mid_reset = true;
-        }
-    }
-    else if (qulv >= -20 && qulv <= 0)
-    {
-        if (was_low)
-        {
-            low_to_mid_reset = true;
+        for (int i = 0; i < points_per_side; ++i) {
+            if (point_index >= point_count) break;
+            float t = (float)i / points_per_side;
+            temp_path[point_index].x = start_x + t * (end_x - start_x);
+            temp_path[point_index].y = start_y + t * (end_y - start_y);
+            temp_path[point_index].heading = atan2f(end_y - start_y, end_x - start_y);
+            
+            if (i < 5 || i >= points_per_side - 5) {
+                temp_path[point_index].reference_speed = 1.5f;
+            } else {
+                temp_path[point_index].reference_speed = 3.5f;
+            }
+            point_index++;
         }
     }
     
-    // 处理状态转换
-    lianxuzhijiao = 0;
-    if (zheng_reset_state > 0 && zheng_reset_state < 3)
-    {
-        lianxuzhijiao = 1;
+    for (int i = 1; i < point_index - 1; ++i) {
+        temp_path[i].curvature = calculate_curvature_from_points(&temp_path[i-1], &temp_path[i], &temp_path[i+1]);
     }
-    else if (fu_reset_state > 0 && fu_reset_state < 3)
-    {
-        lianxuzhijiao = 2;
-    }
+    temp_path[0].curvature = temp_path[1].curvature;
+    temp_path[point_index - 1].curvature = temp_path[point_index - 2].curvature;
+    
+    Navigation_SetPath(temp_path, point_index);
 }
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     计算路径跟踪输出
-//-------------------------------------------------------------------------------------------------------------------
-static void nav_calculate_path_tracking_output(void)
+//================================================= 内部函数实现 =================================================
+
+static float calculate_curvature_from_points(const OptimalPathPoint* p1, const OptimalPathPoint* p2, const OptimalPathPoint* p3)
 {
-    // 实现路径跟踪算法
-    float error = nav_system.error_value;
-    
-    // 简单的比例控制
-    nav_system.final_output = error * 0.5f; // 简化的控制输出
-    
-    // 限制输出范围
-    if (nav_system.final_output > 100.0f)
-    {
-        nav_system.final_output = 100.0f;
-    }
-    else if (nav_system.final_output < -100.0f)
-    {
-        nav_system.final_output = -100.0f;
-    }
+    float dx1 = p2->x - p1->x, dy1 = p2->y - p1->y;
+    float dx2 = p3->x - p2->x, dy2 = p3->y - p2->y;
+    float dx3 = p3->x - p1->x, dy3 = p3->y - p1->y;
+
+    float area_times_2 = fabs(dx1 * dy2 - dx2 * dy1);
+    float dist1 = sqrtf(dx1 * dx1 + dy1 * dy1);
+    float dist2 = sqrtf(dx2 * dx2 + dy2 * dy2);
+    float dist3 = sqrtf(dx3 * dx3 + dy3 * dy3);
+
+    float denominator = dist1 * dist2 * dist3;
+    if (denominator < 1e-6) return 0.0f;
+    return (2.0f * area_times_2) / denominator;
 }
 
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     处理曲率阈值
-//-------------------------------------------------------------------------------------------------------------------
-static void nav_process_curvature_threshold(void)
+static float normalize_angle(float angle)
 {
-    // 处理曲率阈值逻辑
-    if (fabs(qulv) > 50)
-    {
-        curvature_threshold_counter++;
-    }
-    
-    // 更新时间计数器（溢出不是会自动归零吗）
-    zhetime++;
-
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-// 函数简介     计算曲率值
-//-------------------------------------------------------------------------------------------------------------------
-static float nav_calculate_curvature_value(float theta1, float theta2, float theta3, int d12, int d23)
-{
-    // 简化的曲率计算
-    if (d12 == 0 || d23 == 0)
-    {
-        return 0.0f;
-    }
-    
-    float angle_diff1 = theta2 - theta1;
-    float angle_diff2 = theta3 - theta2;
-    
-    float curvature = (angle_diff2 - angle_diff1) / ((d12 + d23) / 2.0f);
-    
-    return curvature;
+    while (angle > (float)M_PI) angle -= 2.0f * (float)M_PI;
+    while (angle < -(float)M_PI) angle += 2.0f * (float)M_PI;
+    return angle;
 }
