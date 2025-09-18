@@ -15,6 +15,7 @@
 #include "navigation_flash_improved.h"
 #include "driver_sch16tk10.h"
 #include "driver_encoder.h"
+#include "math_utils.h" // 引入新的数学工具模块
 
 //================================================= 宏定义 =================================================
 #define DEG_TO_RAD(deg) ((deg) * (M_PI / 180.0f))
@@ -25,7 +26,6 @@ NavigationSystem g_nav_system;
 
 //================================================= 内部函数声明 =================================================
 static float calculate_curvature_from_points(const OptimalPathPoint* p1, const OptimalPathPoint* p2, const OptimalPathPoint* p3);
-static float normalize_angle(float angle);
 
 
 //================================================================================================================
@@ -44,33 +44,7 @@ void Navigation_Init(void)
     g_nav_system.initialized = true;
 }
 
-void Navigation_UpdateState(float dt)
-{
-    if (!g_nav_system.initialized) return;
-
-    // 1. 从编码器获取轮速
-    float left_speed = encoder_get_speed(ENCODER_ID_LEFT);
-    float right_speed = encoder_get_speed(ENCODER_ID_RIGHT);
-
-    // 2. 计算车辆的线速度和角速度
-    g_nav_system.state.linear_speed = (left_speed + right_speed) / 2.0f;
-    
-    // 3. 从IMU获取角速度
-    SCH1_raw_data imu_raw;
-    SCH1_result imu_data;
-    SCH1_getData(&imu_raw);
-    SCH1_convert_data(&imu_raw, &imu_data);
-    float omega_imu = -DEG_TO_RAD(imu_data.Rate1[2]); // Z轴角速度, 注意方向可能需要取反
-
-    // 4. 积分更新位置和姿态 (航位推算)
-    float speed_mm_s = g_nav_system.state.linear_speed * 1000.0f;
-    g_nav_system.state.x += speed_mm_s * cosf(g_nav_system.state.heading) * dt;
-    g_nav_system.state.y += speed_mm_s * sinf(g_nav_system.state.heading) * dt;
-    g_nav_system.state.heading += omega_imu * dt;
-    g_nav_system.state.heading = normalize_angle(g_nav_system.state.heading);
-}
-
-MotionCommand Navigation_PathTrack(void)
+MotionCommand Navigation_PathTrack(const VehicleState* current_state)
 {
     MotionCommand cmd = {0};
     if (!g_nav_system.initialized || g_nav_system.path_point_count == 0)
@@ -78,7 +52,7 @@ MotionCommand Navigation_PathTrack(void)
         return cmd;
     }
     
-    VehicleState* state = &g_nav_system.state;
+    const VehicleState* state = current_state;
     OptimalPathPoint* path = g_nav_system.path;
 
     // 1. 查找路径上最近的点
@@ -209,11 +183,4 @@ static float calculate_curvature_from_points(const OptimalPathPoint* p1, const O
     float denominator = dist1 * dist2 * dist3;
     if (denominator < 1e-6) return 0.0f;
     return (2.0f * area_times_2) / denominator;
-}
-
-static float normalize_angle(float angle)
-{
-    while (angle > (float)M_PI) angle -= 2.0f * (float)M_PI;
-    while (angle < -(float)M_PI) angle += 2.0f * (float)M_PI;
-    return angle;
 }

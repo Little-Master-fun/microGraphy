@@ -1428,6 +1428,75 @@
     </configuration>
     <group>
         <name>code</name>
+        <group>
+            <name>config</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\config\config_infineon.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\config\config_navigation.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\config\config_navigation.h</name>
+            </file>
+        </group>
+        <group>
+            <name>drivers</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_encoder.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_encoder.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_motor.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_motor.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_sch16tk10.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\driver_sch16tk10.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\ipc_protocol.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\zf_device_systick.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\drivers\zf_device_systick.h</name>
+            </file>
+        </group>
+        <group>
+            <name>nav</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.h</name>
+            </file>
+        </group>
+        <group>
+            <name>state</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\estimator\state_estimator.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\estimator\state_estimator.h</name>
+            </file>
+        </group>
+        <group>
+            <name>utils</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\utils\math_utils.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\utils\math_utils.h</name>
+            </file>
+        </group>
         <file>
             <name>$PROJ_DIR$\..\..\code\本文件夹作用.txt</name>
         </file>

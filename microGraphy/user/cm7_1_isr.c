@@ -36,13 +36,45 @@
 
 
 #include "zf_common_headfile.h"
-// **************************** PIT中断函数 ****************************
-void pit0_ch0_isr()                     // 定时器通道 0 周期中断服务函数      
+
+
+#include "driver_sch16tk10.h"
+#include "driver_encoder.h"
+#include "state_estimator.h"
+#include "ipc_protocol.h"
+
+// 定义状态估计的周期 (ms)
+#define ESTIMATOR_UPDATE_PERIOD_MS (2)
+
+void pit0_ch0_isr(void)
 {
+    // 清除中断标志位
     pit_isr_flag_clear(PIT_CH0);
-  
+
+    // 1. 执行状态估算
+    state_estimator_update((float)ESTIMATOR_UPDATE_PERIOD_MS / 1000.0f);
     
+    // 2. 获取最新的状态数据
+    const VehicleState* current_state = state_estimator_get_state();
     
+    // 3. 将状态数据通过IPC发送给M7_0
+    ipc_data_converter_t converter;
+
+    // 发送ID头
+    ipc_send_data(IPC_ID_VEHICLE_STATE);
+    
+    // 依次发送 x, y, heading, speed
+    converter.f32 = current_state->x;
+    ipc_send_data(converter.u32);
+    
+    converter.f32 = current_state->y;
+    ipc_send_data(converter.u32);
+
+    converter.f32 = current_state->heading;
+    ipc_send_data(converter.u32);
+
+    converter.f32 = current_state->linear_speed;
+    ipc_send_data(converter.u32);
 }
 
 void pit0_ch1_isr()                     // 定时器通道 1 周期中断服务函数      
