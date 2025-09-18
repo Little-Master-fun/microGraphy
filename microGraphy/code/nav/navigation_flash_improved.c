@@ -1,11 +1,11 @@
 /*********************************************************************************************************************
 * 文件名称          navigation_flash_improved.c
 * 功能说明          【重构版】导航与路径跟踪系统 实现文件
-* 作者              AI Assistant
+* 作者              LittleMaster
 * 版本信息          v3.0
 * 修改记录
 * 日期              作者                版本              备注
-* 2024-XX-XX        AI Assistant        v3.0              整合状态估计与路径跟踪控制逻辑
+* 2025-09-18        LittleMaster        v3.0              整合状态估计与路径跟踪控制逻辑
 *
 * 文件作用说明：
 * 本文件实现了导航系统的核心功能，包括状态估计、路径管理和路径跟踪控制。
@@ -13,6 +13,7 @@
 ********************************************************************************************************************/
 
 #include "navigation_flash_improved.h"
+#include "mpc_controller.h"
 #include "driver_sch16tk10.h"
 #include "driver_encoder.h"
 #include "math_utils.h" // 引入新的数学工具模块
@@ -25,6 +26,7 @@
 NavigationSystem g_nav_system;
 
 //================================================= 内部函数声明 =================================================
+static MotionCommand navigation_stanley_control(const VehicleState* current_state);
 static float calculate_curvature_from_points(const OptimalPathPoint* p1, const OptimalPathPoint* p2, const OptimalPathPoint* p3);
 
 
@@ -41,70 +43,62 @@ void Navigation_Init(void)
     g_nav_system.state.y = 0;
     g_nav_system.state.heading = DEG_TO_RAD(90.0f); // 假设初始朝向Y轴正方向
     
+    // 设置默认控制器为Stanley
+    g_nav_system.controller_type = NAV_CONTROLLER_STANLEY;
+    
+    // 初始化MPC控制器
+    mpc_weights_t mpc_weights;
+    mpc_get_default_weights(&mpc_weights);
+    mpc_controller_init(&mpc_weights);
+    
     g_nav_system.initialized = true;
+}
+
+bool Navigation_SetControllerType(nav_controller_type_t controller_type)
+{
+    if (!g_nav_system.initialized) {
+        return false;
+    }
+    
+    g_nav_system.controller_type = controller_type;
+    
+    // 如果切换到MPC，重置MPC控制器状态
+    if (controller_type == NAV_CONTROLLER_MPC) {
+        mpc_reset_controller();
+    }
+    
+    return true;
+}
+
+nav_controller_type_t Navigation_GetControllerType(void)
+{
+    return g_nav_system.controller_type;
 }
 
 MotionCommand Navigation_PathTrack(const VehicleState* current_state)
 {
     MotionCommand cmd = {0};
-    if (!g_nav_system.initialized || g_nav_system.path_point_count == 0)
+    if (!g_nav_system.initialized || g_nav_system.path_point_count == 0 || current_state == NULL)
     {
         return cmd;
     }
     
-    const VehicleState* state = current_state;
-    OptimalPathPoint* path = g_nav_system.path;
-
-    // 1. 查找路径上最近的点
-    int closest_point_idx = 0;
-    float min_dist_sq = 1e10f;
-    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
-        float dx = path[i].x - state->x;
-        float dy = path[i].y - state->y;
-        float dist_sq = dx * dx + dy * dy;
-        if (dist_sq < min_dist_sq) {
-            min_dist_sq = dist_sq;
-            closest_point_idx = i;
-        }
-    }
-
-    // 2. 查找前瞻目标点
-    int target_idx = closest_point_idx;
-    float lookahead_dist_sq = NAV_LOOKAHEAD_DISTANCE * NAV_LOOKAHEAD_DISTANCE;
-    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
-        int check_idx = (closest_point_idx + i) % g_nav_system.path_point_count;
-        float dx = path[check_idx].x - state->x;
-        float dy = path[check_idx].y - state->y;
-        if (dx * dx + dy * dy > lookahead_dist_sq) {
-            target_idx = check_idx;
+    // 根据当前控制器类型选择算法
+    switch (g_nav_system.controller_type) {
+        case NAV_CONTROLLER_STANLEY:
+            cmd = navigation_stanley_control(current_state);
             break;
-        }
+            
+        case NAV_CONTROLLER_MPC:
+            cmd = mpc_compute_control(current_state, g_nav_system.path, 
+                                    g_nav_system.path_point_count, NAV_LOOKAHEAD_DISTANCE);
+            break;
+            
+        default:
+            // 默认使用Stanley控制器
+            cmd = navigation_stanley_control(current_state);
+            break;
     }
-    OptimalPathPoint* target_point = &path[target_idx];
-
-    // ===== Stanley 控制律核心 =====
-    // 3. 计算航向误差
-    float heading_error = normalize_angle(target_point->heading - state->heading);
-
-    // 4. 计算横向误差
-    float dx_path = target_point->x - state->x;
-    float dy_path = target_point->y - state->y;
-    float lateral_error = -dx_path * sinf(target_point->heading) + dy_path * cosf(target_point->heading);
-    
-    // 5. 航向误差的反馈控制
-    float steering_angle_heading = heading_error;
-
-    // 6. 横向误差的反馈控制
-    float steering_angle_lateral = atan2f(NAV_STANLEY_LATERAL_GAIN * lateral_error, state->linear_speed * 1000.0f + 1e-6);
-    
-    // 7. 组合最终转向角
-    float steering_angle = steering_angle_heading + steering_angle_lateral;
-
-    // 8. 将转向角转换为期望角速度
-    cmd.desired_angular_speed = state->linear_speed * tanf(steering_angle) / (NAV_WHEELBASE / 1000.0f);
-
-    // 9. 设定期望线速度
-    cmd.desired_linear_speed = target_point->reference_speed;
     
     return cmd;
 }
@@ -183,4 +177,66 @@ static float calculate_curvature_from_points(const OptimalPathPoint* p1, const O
     float denominator = dist1 * dist2 * dist3;
     if (denominator < 1e-6) return 0.0f;
     return (2.0f * area_times_2) / denominator;
+}
+
+//================================================= Stanley控制器实现 =================================================
+
+static MotionCommand navigation_stanley_control(const VehicleState* current_state)
+{
+    MotionCommand cmd = {0};
+    const VehicleState* state = current_state;
+    OptimalPathPoint* path = g_nav_system.path;
+
+    // 1. 查找路径上最近的点
+    int closest_point_idx = 0;
+    float min_dist_sq = 1e10f;
+    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
+        float dx = path[i].x - state->x;
+        float dy = path[i].y - state->y;
+        float dist_sq = dx * dx + dy * dy;
+        if (dist_sq < min_dist_sq) {
+            min_dist_sq = dist_sq;
+            closest_point_idx = i;
+        }
+    }
+
+    // 2. 查找前瞻目标点
+    int target_idx = closest_point_idx;
+    float lookahead_dist_sq = NAV_LOOKAHEAD_DISTANCE * NAV_LOOKAHEAD_DISTANCE;
+    for (int i = 0; i < g_nav_system.path_point_count; ++i) {
+        int check_idx = (closest_point_idx + i) % g_nav_system.path_point_count;
+        float dx = path[check_idx].x - state->x;
+        float dy = path[check_idx].y - state->y;
+        if (dx * dx + dy * dy > lookahead_dist_sq) {
+            target_idx = check_idx;
+            break;
+        }
+    }
+    OptimalPathPoint* target_point = &path[target_idx];
+
+    // ===== Stanley 控制律核心 =====
+    // 3. 计算航向误差
+    float heading_error = normalize_angle(target_point->heading - state->heading);
+
+    // 4. 计算横向误差
+    float dx_path = target_point->x - state->x;
+    float dy_path = target_point->y - state->y;
+    float lateral_error = -dx_path * sinf(target_point->heading) + dy_path * cosf(target_point->heading);
+    
+    // 5. 航向误差的反馈控制
+    float steering_angle_heading = heading_error;
+
+    // 6. 横向误差的反馈控制
+    float steering_angle_lateral = atan2f(NAV_STANLEY_LATERAL_GAIN * lateral_error, state->linear_speed * 1000.0f + 1e-6);
+    
+    // 7. 组合最终转向角
+    float steering_angle = steering_angle_heading + steering_angle_lateral;
+
+    // 8. 将转向角转换为期望角速度
+    cmd.desired_angular_speed = state->linear_speed * tanf(steering_angle) / (NAV_WHEELBASE / 1000.0f);
+
+    // 9. 设定期望线速度
+    cmd.desired_linear_speed = target_point->reference_speed;
+    
+    return cmd;
 }

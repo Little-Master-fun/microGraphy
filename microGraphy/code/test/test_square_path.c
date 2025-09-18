@@ -1,14 +1,13 @@
 /*********************************************************************************************************************
 * 文件名称          test_square_path.c
 * 功能说明          【OBSOLETE/已弃用】正方形路径测试 实现文件
-* 作者              AI Assistant
+* 作者              LittleMaster
 * 版本信息          v3.0
 * 修改记录
 * 日期              作者                版本              备注
-* 2024-XX-XX        AI Assistant        v3.0              标记为已弃用
+* 2025-09-18        LittleMaster        v3.0              标记为已弃用
 *
 * 文件作用说明：
-* [!!重要!!] 本文件内的测试逻辑已在双核重构中被迁移至：
 *  - Core M7_0: `code/system/system_control.c` (负责主循环和决策)
 *  - Core M7_1: `code/estimator/state_estimator.c` & `user/main_cm7_1.c` (负责高频状态计算)
 *

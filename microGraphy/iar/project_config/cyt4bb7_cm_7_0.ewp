@@ -1750,6 +1750,12 @@
         <group>
             <name>nav</name>
             <file>
+                <name>$PROJ_DIR$\..\..\code\nav\mpc_controller.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\nav\mpc_controller.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.c</name>
             </file>
             <file>
@@ -1778,6 +1784,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_motor_control.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\test\test_mpc_navigation.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\test\test_sch16tk10.c</name>
@@ -2093,6 +2102,12 @@
         </group>
         <group>
             <name>utils</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\filter\kalman_filter.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\filter\kalman_filter.h</name>
+            </file>
             <file>
                 <name>$PROJ_DIR$\..\..\code\utils\math_utils.c</name>
             </file>

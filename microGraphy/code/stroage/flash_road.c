@@ -1,98 +1,16 @@
 /*********************************************************************************************************************
 * 文件名称          flash_road.c
 * 功能说明          Flash存储路径数据驱动程序实现文件
-* 作者              AI Assistant
+* 作者              LittleMaster
 * 版本信息          v2.0
 * 修改记录
 * 日期              作者                备注
-* 2024-XX-XX        AI Assistant        代码结构优化，模块化设计，添加错误处理
+* 2025-09-18        LittleMaster        代码结构优化，模块化设计，添加错误处理
 *
 * 文件作用说明：
 * 本文件实现Flash存储系统的所有功能，提供路径数据的存储、读取、验证和管理
 * 采用模块化设计，支持大容量数据的分页存储和分区管理
 *
-* 主要实现功能：
-*
-* 1. 存储管理模块 (Storage Management)
-*    - flash_road_store(): 主存储接口
-*    - flash_store_metadata(): 存储元数据信息
-*    - flash_store_integer_data(): 存储整数数据
-*    - flash_store_float_data(): 存储浮点数据
-*    - flash_calculate_pages(): 计算所需页数
-*
-* 2. 读取管理模块 (Load Management)
-*    - flash_road_load(): 主读取接口
-*    - flash_load_metadata(): 读取元数据信息
-*    - flash_load_integer_data(): 读取整数数据
-*    - flash_load_float_data(): 读取浮点数据
-*    - flash_validate_data_size(): 验证数据大小
-*
-* 3. 数据验证模块 (Data Validation)
-*    - flash_road_verify(): 数据完整性验证
-*    - flash_check_data_integrity(): 检查数据完整性
-*    - flash_verify_metadata(): 验证元数据
-*    - flash_recover_data(): 数据恢复
-*
-* 4. 状态管理模块 (Status Management)
-*    - flash_road_get_status(): 获取系统状态
-*    - flash_road_get_data_count(): 获取数据计数
-*    - flash_update_status(): 更新状态
-*    - flash_reset_status(): 重置状态
-*
-* 5. 工具函数模块 (Utility Functions)
-*    - flash_road_init(): 系统初始化
-*    - flash_road_clear(): 清除数据
-*    - flash_safe_erase_page(): 安全页擦除
-*    - flash_safe_write_page(): 安全页写入
-*    - flash_safe_read_page(): 安全页读取
-*
-* 6. 错误处理模块 (Error Handling)
-*    - 完善的参数验证机制
-*    - 详细的错误代码定义
-*    - 自动错误恢复功能
-*    - 操作失败回滚机制
-*
-* 7. 兼容性模块 (Compatibility)
-*    - flash_road_memery_store(): 旧接口兼容
-*    - flash_road_memery_get(): 旧接口兼容
-*
-* 8. 调试支持模块 (Debug Support)
-*    - 详细的调试信息输出
-*    - 操作状态跟踪
-*    - 性能统计功能
-*
-* 技术特点：
-*
-* 1. 模块化架构
-*    - 功能模块独立，便于维护和扩展
-*    - 清晰的接口定义和职责分离
-*
-* 2. 错误处理机制
-*    - 多级错误检测和处理
-*    - 自动数据恢复功能
-*    - 操作状态实时监控
-*
-* 3. 数据完整性保障
-*    - 双备份存储机制
-*    - CRC校验和数据验证
-*    - 自动损坏检测和修复
-*
-* 4. 存储优化
-*    - 分页存储提高效率
-*    - 分区管理节省空间
-*    - 智能存储空间分配
-*
-* 5. 兼容性设计
-*    - 保持向后兼容性
-*    - 渐进式接口升级
-*    - 平滑的版本迁移
-*
-* 使用注意事项：
-* 1. 确保Flash硬件正确初始化
-* 2. 在关键应用中启用数据验证
-* 3. 定期检查存储系统状态
-* 4. 合理规划存储空间使用
-* 5. 在系统重启后验证数据完整性
 ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"

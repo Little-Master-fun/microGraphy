@@ -1176,6 +1176,12 @@
         <group>
             <name>nav</name>
             <file>
+                <name>$PROJ_DIR$\..\..\code\nav\mpc_controller.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\code\nav\mpc_controller.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\code\nav\navigation_flash_improved.c</name>
             </file>
             <file>
